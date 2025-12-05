@@ -1,19 +1,19 @@
 {
   "expo": {
-    "name": "Change Bank",
-    "slug": "change-bank",
-    "version": "1.0.0",
+    "name": "Power Bank",
+    "slug": "powerbank",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "changebank",
+    "scheme": "powerbank",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "cn.xixiu.changebank"
+      "bundleIdentifier": "cn.xixiu.powerbank"
     },
     "android": {
-      "package": "cn.xixiu.changebank",
+      "package": "cn.xixiu.powerbank",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -40,6 +40,12 @@
           "dark": {
             "backgroundColor": "#000000"
           }
+        }
+      ],
+      [
+        "react-native-ble-plx",
+        {
+          "isBackgroundEnabled": true
         }
       ]
     ],

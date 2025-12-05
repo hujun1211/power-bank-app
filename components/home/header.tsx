@@ -14,11 +14,7 @@ export default function Header() {
     >
       <Pressable
         onPress={() => {
-          if (router.canGoBack()) {
-            router.back();
-          } else {
-            router.push("/(auth)/login");
-          }
+          router.push("/(auth)/login");
         }}
         className="flex gap-2"
       >

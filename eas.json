@@ -4,7 +4,11 @@
     "production-aab": {
       "distribution": "store",
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "app-bundle",
+        "gradleCommand": ":app:bundleRelease"
+      },
+      "env": {
+        "GRADLE_BUILD_PROPERTY_org_gradle_jvmargs": "-Xmx4g"
       }
     },
     "production-apk": {

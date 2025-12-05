@@ -55,11 +55,7 @@ export default function LoginCodePage() {
         <View className="flex-row items-center justify-between px-4 h-14">
           <TouchableOpacity
             onPress={() => {
-              if (router.canGoBack()) {
-                router.back();
-              } else {
-                router.replace("/(tabs)");
-              }
+              router.replace("/(tabs)");
             }}
             className="h-10 w-10 bg-white rounded-full items-center justify-center shadow-sm"
           >
