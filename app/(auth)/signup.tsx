@@ -1,3 +1,5 @@
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useDebouncedNavigation } from "@/hooks/use-debounced-navigation";
 import { useRouter } from "expo-router";
 import {
   CheckCircle2,
@@ -10,6 +12,7 @@ import {
   Smartphone,
 } from "lucide-react-native";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Keyboard,
@@ -26,11 +29,13 @@ import CustomAlert from "../../utils/my-alert";
 export default function SignUpPage() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-
+  const { replace } = useDebouncedNavigation(500);
+  const colorScheme = useColorScheme();
   // 表单状态
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
+  const { t } = useTranslation();
 
   // UI 交互状态
   const [showPassword, setShowPassword] = useState(false);
@@ -69,9 +74,9 @@ export default function SignUpPage() {
   const handleSendCode = () => {
     if (!phone) {
       setAlertConfig({
-        title: "提示",
-        message: "请输入手机号码",
-        confirmText: "确定",
+        title: t("tip"),
+        message: t("register-alert-message-phone-required"),
+        confirmText: t("confirm"),
         showCancel: false,
         onConfirm: () => setAlertVisible(false),
       });
@@ -87,9 +92,9 @@ export default function SignUpPage() {
   const handleSignUp = async () => {
     if (!phone || !code || !password) {
       setAlertConfig({
-        title: "提示",
-        message: "请填写完整注册信息",
-        confirmText: "确定",
+        title: t("tip"),
+        message: t("register-alert-message-info-required"),
+        confirmText: t("confirm"),
         showCancel: false,
         onConfirm: () => setAlertVisible(false),
       });
@@ -99,9 +104,9 @@ export default function SignUpPage() {
 
     if (!isAgreed) {
       setAlertConfig({
-        title: "提示",
-        message: "请先阅读并同意用户协议",
-        confirmText: "确定",
+        title: t("tip"),
+        message: t("register-alert-message-agreement-required"),
+        confirmText: t("confirm"),
         showCancel: false,
         onConfirm: () => setAlertVisible(false),
       });
@@ -116,14 +121,14 @@ export default function SignUpPage() {
       setIsLoading(false);
       // 注册成功后，通常跳转到 Tabs 或 登录页
       setAlertConfig({
-        title: "注册成功",
-        message: "欢迎加入我们！",
+        title: t("tip"),
+        message: t("register-alert-message-success"),
         primaryColor: "#10B981",
-        confirmText: "开始使用",
+        confirmText: t("confirm"),
         showCancel: false,
         onConfirm: () => {
           setAlertVisible(false);
-          router.replace("/(tabs)");
+          replace("/(tabs)");
         },
       });
       setAlertVisible(true);
@@ -134,20 +139,18 @@ export default function SignUpPage() {
     <>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View
-          className="flex-1 bg-gray-50"
+          className="flex-1 bg-gray-50 dark:bg-gray-900"
           style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
         >
           {/* 顶部导航栏 */}
           <View className="flex-row items-center justify-between px-4 h-14">
             <TouchableOpacity
               onPress={() =>
-                router.canGoBack()
-                  ? router.back()
-                  : router.replace("/(auth)/login")
+                router.canGoBack() ? router.back() : replace("/(auth)/login")
               }
-              className="h-10 w-10 rounded-full bg-white items-center justify-center shadow-sm"
+              className="h-10 w-10 rounded-full bg-white dark:bg-gray-800 items-center justify-center shadow-sm"
             >
-              <ChevronLeft size={24} color="#333" />
+              <ChevronLeft size={24} color={colorScheme === "dark" ? "white" : "#333"} />
             </TouchableOpacity>
           </View>
 
@@ -160,22 +163,22 @@ export default function SignUpPage() {
             <View className="px-8 pt-6 pb-20">
               {/* 标题 */}
               <View className="mb-10">
-                <Text className="text-3xl font-bold text-gray-900 mb-3">
-                  创建新账号 🚀
+                <Text className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
+                  {t("register-title")} 🚀
                 </Text>
-                <Text className="text-lg text-gray-500">
-                  注册即可体验更多精彩功能
+                <Text className="text-lg text-gray-500 dark:text-gray-400">
+                  {t("register-subtitle")}
                 </Text>
               </View>
 
               {/* 表单区域 - 垂直排列，互不干扰 */}
               <View className="space-y-4">
                 {/* 手机号 */}
-                <View className="flex-row items-center bg-white rounded-2xl px-4 h-14 border border-gray-100 shadow-sm">
+                <View className="flex-row items-center bg-white dark:bg-gray-800 rounded-2xl px-4 h-14 border border-gray-100 dark:border-gray-700 shadow-sm">
                   <Smartphone size={20} color="#9CA3AF" />
                   <TextInput
-                    className="flex-1 ml-3 text-base text-gray-900"
-                    placeholder="请输入手机号码"
+                    className="flex-1 ml-3 text-base text-gray-900 dark:text-white"
+                    placeholder={t("register-phone-placeholder")}
                     placeholderTextColor="#9CA3AF"
                     keyboardType="phone-pad"
                     value={phone}
@@ -184,11 +187,11 @@ export default function SignUpPage() {
                 </View>
 
                 {/* 验证码 */}
-                <View className="flex-row items-center bg-white rounded-2xl px-4 h-14 border border-gray-100 shadow-sm mt-4">
+                <View className="flex-row items-center bg-white dark:bg-gray-800 rounded-2xl px-4 h-14 border border-gray-100 dark:border-gray-700 shadow-sm mt-4">
                   <KeyRound size={20} color="#9CA3AF" />
                   <TextInput
-                    className="flex-1 ml-3 text-base text-gray-900"
-                    placeholder="请输入验证码"
+                    className="flex-1 ml-3 text-base text-gray-900 dark:text-white"
+                    placeholder={t("register-code-placeholder")}
                     placeholderTextColor="#9CA3AF"
                     keyboardType="number-pad"
                     value={code}
@@ -198,22 +201,24 @@ export default function SignUpPage() {
                   <TouchableOpacity
                     onPress={handleSendCode}
                     disabled={countdown > 0}
-                    className="border-l border-gray-200 pl-3 py-1"
+                    className="border-l border-gray-200 dark:border-gray-600 pl-3 py-1"
                   >
                     <Text
-                      className={`text-sm font-medium ${countdown > 0 ? "text-gray-400" : "text-blue-600"}`}
+                      className={`text-sm font-medium ${countdown > 0 ? "text-gray-400" : "text-blue-600 dark:text-blue-400"}`}
                     >
-                      {countdown > 0 ? `${countdown}s` : "获取验证码"}
+                      {countdown > 0
+                        ? `${countdown}s`
+                        : t("register-code-hint")}
                     </Text>
                   </TouchableOpacity>
                 </View>
 
                 {/* 设置密码 */}
-                <View className="flex-row items-center bg-white rounded-2xl px-4 h-14 border border-gray-100 shadow-sm mt-4">
+                <View className="flex-row items-center bg-white dark:bg-gray-800 rounded-2xl px-4 h-14 border border-gray-100 dark:border-gray-700 shadow-sm mt-4">
                   <Lock size={20} color="#9CA3AF" />
                   <TextInput
-                    className="flex-1 ml-3 text-base text-gray-900"
-                    placeholder="设置登录密码"
+                    className="flex-1 ml-3 text-base text-gray-900 dark:text-white"
+                    placeholder={t("register-password-placeholder")}
                     placeholderTextColor="#9CA3AF"
                     secureTextEntry={!showPassword}
                     value={password}
@@ -240,22 +245,22 @@ export default function SignUpPage() {
                     {isAgreed ? (
                       <CheckCircle2
                         size={13}
-                        color="#000"
-                        fill="#000"
+                        color={colorScheme === "dark" ? "white" : "black"}
+                        fill={colorScheme === "dark" ? "white" : "black"}
                         className="text-black"
                       />
                     ) : (
                       <Circle size={13} color="#9CA3AF" />
                     )}
                   </View>
-                  <Text className="text-xs text-gray-500 ml-2 flex-1 leading-5">
-                    我已阅读并同意
-                    <Text className="text-blue-600 font-medium">
-                      《用户服务协议》
+                  <Text className="text-xs text-gray-500 dark:text-gray-400 ml-2 flex-1 leading-5">
+                    {t("register-bottom-hint-pre")}
+                    <Text className="text-blue-600 dark:text-blue-400 font-medium">
+                      {t("register-bottom-agreement-1")}
                     </Text>
-                    和
-                    <Text className="text-blue-600 font-medium">
-                      《隐私政策》
+                    {t("register-bottom-hint-and")}
+                    <Text className="text-blue-600 dark:text-blue-400 font-medium">
+                      {t("register-bottom-agreement-2")}
                     </Text>
                   </Text>
                 </TouchableOpacity>
@@ -265,14 +270,14 @@ export default function SignUpPage() {
                   onPress={handleSignUp}
                   disabled={isLoading}
                   className={`h-14 rounded-2xl items-center justify-center mt-6 ${
-                    isAgreed ? "bg-black" : "bg-gray-300" // 未勾选协议时按钮变灰
+                    isAgreed ? "bg-black dark:bg-gray-800" : "bg-gray-300 dark:bg-gray-600" // 未勾选协议时按钮变灰
                   }`}
                 >
                   {isLoading ? (
                     <ActivityIndicator color="white" />
                   ) : (
                     <Text className="text-white text-lg font-bold">
-                      立即注册
+                      {t("register-button")}
                     </Text>
                   )}
                 </TouchableOpacity>
@@ -295,8 +300,8 @@ export default function SignUpPage() {
         title={alertConfig.title}
         message={alertConfig.message}
         primaryColor={alertConfig.primaryColor || "#007AFF"}
-        confirmText={alertConfig.confirmText || "确认"}
-        cancelText={alertConfig.cancelText || "取消"}
+        confirmText={alertConfig.confirmText || t("confirm")}
+        cancelText={alertConfig.cancelText || t("cancel")}
         showCancel={alertConfig.showCancel !== false}
         onConfirm={alertConfig.onConfirm || (() => setAlertVisible(false))}
         onCancel={() => setAlertVisible(false)}

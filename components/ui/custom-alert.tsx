@@ -1,10 +1,10 @@
 import React from "react";
 import {
-   Modal,
-   Text,
-   TouchableOpacity,
-   TouchableWithoutFeedback,
-   View
+  Modal,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View
 } from "react-native";
 
 interface CustomAlertProps {

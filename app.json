@@ -47,6 +47,14 @@
         {
           "isBackgroundEnabled": true
         }
+      ],
+      "expo-localization",
+      [
+        "react-native-maps",
+        {
+          "iosGoogleMapsApiKey": "YOUR_KEY_HERE",
+          "androidGoogleMapsApiKey": "AIzaSyBzH_TrckoAbKUtF3suyVAnTO-v1tw33hE"
+        }
       ]
     ],
     "experiments": {

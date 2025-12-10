@@ -10,14 +10,14 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "./global.css";
+import "../i18n";
+
 export const unstable_settings = {
   initialRouteName: "(tabs)",
 };
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-
-
 
   return (
     <SafeAreaProvider>

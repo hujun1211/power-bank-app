@@ -1,11 +1,12 @@
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useEffect, useRef, useState } from "react";
 import {
-   Dimensions,
-   FlatList,
-   NativeScrollEvent,
-   NativeSyntheticEvent,
-   Text,
-   View,
+  Dimensions,
+  FlatList,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Text,
+  View,
 } from "react-native";
 
 const { width } = Dimensions.get("window");
@@ -41,6 +42,7 @@ const bannerData: BannerItem[] = [
 export default function Banner() {
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
+  const colorScheme = useColorScheme();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -101,7 +103,9 @@ export default function Banner() {
           <View
             key={index}
             className={`rounded-full ${
-              index === activeIndex ? "bg-gray-800" : "bg-gray-300"
+              index === activeIndex
+                ? colorScheme === "dark" ? "bg-white" : "bg-gray-800"
+                : colorScheme === "dark" ? "bg-gray-400" : "bg-gray-300"
             }`}
             style={{
               width: index === activeIndex ? 8 : 6,

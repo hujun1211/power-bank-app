@@ -1,56 +1,55 @@
 import MenuList, { MenuItem } from "@/components/ui/menu-list";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useDebouncedNavigation } from "@/hooks/use-debounced-navigation";
 import { useRouter } from "expo-router";
-import {
-   Bell,
-   LogOut,
-   Settings,
-   Shield,
-   User,
-} from "lucide-react-native";
+import { Bell, LogOut, Settings, Shield, User } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+
+
 export default function Mine() {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
-
   const router = useRouter();
+  const { replace, push } = useDebouncedNavigation(500);
   const menuItems: MenuItem[] = [
     {
       id: "1",
       icon: <User size={24} color="#666" />,
-      title: "个人信息",
-      subtitle: "查看和编辑个人资料",
+      title: t("mine-menu-profile-title"),
+      subtitle: t("mine-menu-profile-subtitle"),
       onPress: () => {
-        router.push("/(settings)/profile");
+        push("/(settings)/profile");
       },
     },
     {
       id: "2",
       icon: <Bell size={24} color="#666" />,
-      title: "通知设置",
-      subtitle: "管理通知偏好设置",
+      title: t("mine-menu-notification-title"),
+      subtitle: t("mine-menu-notification-subtitle"),
       onPress: () => {
-        router.push("/(settings)/notification");
+        push("/(settings)/notification");
       },
     },
     {
       id: "3",
       icon: <Shield size={24} color="#666" />,
-      title: "账户安全",
-      subtitle: "密码和安全设置",
+      title: t("mine-menu-security-title"),
+      subtitle: t("mine-menu-security-subtitle"),
       onPress: () => {
-        router.push("/(settings)/security");
+        push("/(settings)/security");
       },
     },
     {
       id: "4",
       icon: <Settings size={24} color="#666" />,
-      title: "应用设置",
-      subtitle: "主题、语言等配置",
+      title: t("mine-menu-settings-title"),
+      subtitle: t("mine-menu-settings-subtitle"),
       onPress: () => {
-        router.push("/(settings)/app-setting");
+        push("/(settings)/app-setting");
       },
     },
   ];
@@ -63,7 +62,7 @@ export default function Mine() {
       >
         {/* 用户头部卡片 */}
         <View className="px-4 py-6">
-          <View className="bg-white/60 dark:bg-black/40 rounded-3xl p-6 flex-row items-center">
+          <View className="bg-white/60 dark:bg-gray-700 rounded-3xl p-6 flex-row items-center">
             <View className="w-16 h-16 rounded-full bg-yellow-300 items-center justify-center mr-4 flex-shrink-0">
               <User size={40} color="white" />
             </View>
@@ -91,7 +90,7 @@ export default function Mine() {
           >
             <LogOut size={20} color="#fff" />
             <Text className="text-white dark:text-red-400 text-base font-medium ml-2">
-              退出登录
+              {t("mine-menu-action-logout")}
             </Text>
           </Pressable>
         </View>

@@ -12,6 +12,7 @@ import {
   Tv,
 } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Animated,
   FlatList,
@@ -194,6 +195,7 @@ export default function AddDevicePage() {
   const [selectedDevices, setSelectedDevices] = useState<Set<string>>(
     new Set()
   );
+  const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const devicesMapRef = useRef<Map<string, BluetoothDevice>>(new Map());
   const [alertVisible, setAlertVisible] = useState(false);
@@ -209,7 +211,7 @@ export default function AddDevicePage() {
   }>({
     title: "",
     message: "",
-    confirmText: "确认",
+    confirmText: t("confirm"),
     showCancel: false,
   });
   // 启动蓝牙扫描
@@ -257,16 +259,16 @@ export default function AddDevicePage() {
       }, 30000);
     } catch (err) {
       console.error("Scan error:", err);
-      const errorMessage = err instanceof Error ? err.message : "扫描失败";
+      const errorMessage = err instanceof Error ? err.message : t("add-device-scan-failed");
       setError(errorMessage);
       setIsScanning(false);
 
       // 显示错误提示
       setAlertConfig({
-        title: "蓝牙启动失败",
-        message: `无法启动蓝牙扫描：${errorMessage}`,
+        title: t("error"),
+        message: `${t("add-device-error-unable-to-start-scan")}: ${errorMessage}`,
         primaryColor: "#EF4444",
-        confirmText: "确定",
+        confirmText: t("confirm"),
         showCancel: false,
         onConfirm: () => setAlertVisible(false),
       });
@@ -339,9 +341,9 @@ export default function AddDevicePage() {
   const confirmAddDevices = async () => {
     if (selectedDevices.size === 0) {
       setAlertConfig({
-        title: "提示",
-        message: "请选择一个设备",
-        confirmText: "确认",
+        title: t("tip"),
+        message: t("add-device-chose-device"),
+        confirmText: t("confirm"),
         showCancel: false,
         onConfirm: () => setAlertVisible(false),
       });
@@ -375,10 +377,10 @@ export default function AddDevicePage() {
 
       // 显示成功提示并返回
       setAlertConfig({
-        title: "成功",
-        message: `已添加设备: ${device.name}`,
+        title: t("success"),
+        message: `${t("add-device-add-success")}: ${device.name}`,
         primaryColor: "#10B981",
-        confirmText: "确认",
+        confirmText: t("confirm"),
         showCancel: false,
         onConfirm: () => {
           setAlertVisible(false);
@@ -390,10 +392,10 @@ export default function AddDevicePage() {
       setAlertVisible(true);
     } catch (err) {
       setAlertConfig({
-        title: "错误",
-        message: "保存设备失败",
+        title: t("error"),
+        message: t("add-device-error-save-failed"),
         primaryColor: "#EF4444",
-        confirmText: "确认",
+        confirmText: t("confirm"),
         showCancel: false,
         onConfirm: () => setAlertVisible(false),
       });
@@ -405,7 +407,7 @@ export default function AddDevicePage() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <TopTitle title="添加设备" showBack={true} />
+      <TopTitle title={t("add-device-header-title")} showBack={true} />
 
       <View className="flex-1 py-4 bg-gray-100 dark:bg-black">
         {/* 扫描动画区域 - 固定高度 */}
@@ -435,10 +437,14 @@ export default function AddDevicePage() {
         {/* 文字说明和卡片列表 - 可滚动区域 */}
         <View className="flex-1">
           <Text className="text-2xl text-center font-bold text-black dark:text-white mb-2 px-4">
-            {isScanning ? "正在扫描附近的设备" : "准备扫描"}
+            {isScanning
+              ? t("add-device-scan-loading")
+              : t("add-device-readying-scan")}
           </Text>
           <Text className="text-base text-gray-600 dark:text-gray-400 text-center px-6 mb-8">
-            {isScanning ? "请确保您的充电宝蓝牙已开启" : "点击下方开始扫描"}
+            {isScanning
+              ? t("add-device-scan-loading-hint")
+              : t("add-device-readying-scan-hint")}
           </Text>
 
           {/* 扫描到设备的列表 - 仅在扫描到设备时显示 */}
@@ -545,7 +551,8 @@ export default function AddDevicePage() {
                           className="text-xs font-medium text-gray-600 dark:text-gray-400"
                           numberOfLines={1}
                         >
-                          信号: {item.rssi} dBm
+                          {t("add-device-rssi-hint")}&nbsp;&nbsp;&nbsp;
+                          {item.rssi} dBm
                         </Text>
                       </View>
                     </Pressable>
@@ -562,8 +569,8 @@ export default function AddDevicePage() {
         title={alertConfig.title}
         message={alertConfig.message}
         primaryColor={alertConfig.primaryColor || "#007AFF"}
-        confirmText={alertConfig.confirmText || "确认"}
-        cancelText={alertConfig.cancelText || "取消"}
+        confirmText={alertConfig.confirmText || t("confirm")}
+        cancelText={alertConfig.cancelText || t("cancel")}
         showCancel={alertConfig.showCancel !== false}
         onConfirm={alertConfig.onConfirm || (() => setAlertVisible(false))}
         onCancel={() => setAlertVisible(false)}
@@ -572,12 +579,14 @@ export default function AddDevicePage() {
       {/* 底部操作按钮 */}
       <DeviceActionButtons
         primaryButton={{
-          label: isScanning ? "停止扫描" : "开始扫描",
+          label: isScanning
+            ? t("add-device-action-stop-scan")
+            : t("add-device-action-start-scan"),
           backgroundColor: "bg-blue-500 dark:bg-blue-600",
           onPress: () => (isScanning ? stopScanning() : startScanning()),
         }}
         secondaryButton={{
-          label: "确认添加",
+          label: t("add-device-action-confirm"),
           backgroundColor: "bg-green-500 dark:bg-green-600",
           onPress: confirmAddDevices,
         }}

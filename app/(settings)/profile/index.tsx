@@ -1,8 +1,9 @@
 import MenuList, { MenuItem } from "@/components/ui/menu-list";
 import TopTitle from "@/components/ui/top-title";
 import * as Notifications from "expo-notifications";
-import { Stack } from "expo-router";
-import { Mail, MapPin, Phone, User } from "lucide-react-native";
+import { Stack, useRouter } from "expo-router";
+import { Mail, Phone, User } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 import { ScrollView, View } from "react-native";
 
 // 配置通知处理
@@ -16,6 +17,8 @@ Notifications.setNotificationHandler({
 });
 
 export default function ProfilePage() {
+  const { t } = useTranslation();
+  const router = useRouter();
   const handleUsernameClick = async () => {
     try {
       // 先请求通知权限
@@ -46,34 +49,30 @@ export default function ProfilePage() {
     {
       id: "1",
       icon: <User size={24} color="#666" />,
-      title: "用户名",
-      subtitle: "修改用户名",
-      onPress: handleUsernameClick,
+      title: t("settings-profile-username-title"),
+      subtitle: t("settings-profile-username-subtitle"),
+      onPress: () => router.push("/(settings)/profile/username"),
     },
     {
       id: "2",
       icon: <Mail size={24} color="#666" />,
-      title: "邮箱",
-      subtitle: "user@example.com",
+      title: t("settings-profile-email-title"),
+      subtitle: t("settings-profile-email-subtitle"),
+      onPress: () => router.push("/(settings)/profile/email"),
     },
     {
       id: "3",
       icon: <Phone size={24} color="#666" />,
-      title: "手机号",
-      subtitle: "138****8888",
-    },
-    {
-      id: "4",
-      icon: <MapPin size={24} color="#666" />,
-      title: "地址",
-      subtitle: "管理收货地址",
-    },
+      title: t("settings-profile-phone-title"),
+      subtitle: t("settings-profile-phone-subtitle"),
+      onPress: () => router.push("/(settings)/profile/phone"),
+    }
   ];
 
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <TopTitle title="个人信息" showBack={true} />
+      <TopTitle title={t("settings-profile-header-title")} showBack={true} />
       <ScrollView className="flex-1 bg-gray-100 dark:bg-black">
         <View className="px-4 mt-6">
           <MenuList items={profileItems} />

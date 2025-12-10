@@ -3,12 +3,14 @@ import TopTitle from "@/components/ui/top-title";
 import { Stack } from "expo-router";
 import { CheckCircle, Download } from "lucide-react-native";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import CustomAlert from "../../utils/my-alert";
 
 export default function OTAPage() {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const [isUpdating, setIsUpdating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [alertVisible, setAlertVisible] = useState(false);
@@ -30,10 +32,10 @@ export default function OTAPage() {
 
   const handleStartUpdate = async () => {
     setAlertConfig({
-      title: "开始升级",
-      message: "确认要升级固件吗？升级过程中请勿中断电源",
-      confirmText: "确定",
-      cancelText: "取消",
+      title: t("ota-start-upgrade"),
+      message: t("ota-confirm-upgrade-message"),
+      confirmText: t("confirm"),
+      cancelText: t("cancel"),
       showCancel: true,
       onConfirm: async () => {
         setAlertVisible(false);
@@ -45,10 +47,10 @@ export default function OTAPage() {
         }
         setIsUpdating(false);
         setAlertConfig({
-          title: "成功",
-          message: "固件升级完成",
+          title: t("success"),
+          message: t("ota-upgrade-completed"),
           primaryColor: "#10B981",
-          confirmText: "确定",
+          confirmText: t("confirm"),
           showCancel: false,
           onConfirm: () => setAlertVisible(false),
         });
@@ -62,8 +64,8 @@ export default function OTAPage() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <TopTitle title="固件升级" showBack={true} />
-      <View className="flex-1 bg-white">
+      <TopTitle title={t("ota-header-title")} showBack={true} />
+      <View className="flex-1 bg-white dark:bg-black">
         <ScrollView
           className="flex-1"
           showsVerticalScrollIndicator={false}
@@ -71,14 +73,14 @@ export default function OTAPage() {
         >
           <View className="p-4">
             {/* 当前版本信息 */}
-            <View className="bg-blue-50 p-4 rounded-lg mb-6">
+            <View className="bg-blue-50 dark:bg-blue-800/80 p-4 rounded-lg mb-6">
               <View className="flex-row items-center gap-3 mb-4">
                 <CheckCircle size={24} color="#3B82F6" strokeWidth={2} />
-                <Text className="text-lg font-semibold text-black">
-                  当前版本
+                <Text className="text-lg font-semibold text-black dark:text-white">
+                  {t("ota-current-version")}
                 </Text>
               </View>
-              <Text className="text-4xl font-bold text-blue-600 mb-2">
+              <Text className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
                 v2.5.1
               </Text>
               {/* <Text className="text-sm text-gray-600">
@@ -87,22 +89,22 @@ export default function OTAPage() {
             </View>
 
             {/* 最新版本信息 */}
-            <View className="bg-green-50 p-4 rounded-lg mb-6">
+            <View className="bg-green-50 dark:bg-green-900/80 p-4 rounded-lg mb-6">
               <View className="flex-row items-center gap-3 mb-4">
                 <Download size={24} color="#10B981" strokeWidth={2} />
-                <Text className="text-lg font-semibold text-black">
-                  最新版本
+                <Text className="text-lg font-semibold text-black dark:text-white">
+                  {t("ota-latest-version")}
                 </Text>
               </View>
-              <Text className="text-4xl font-bold text-green-600 mb-2">
+              <Text className="text-4xl font-bold text-green-600 dark:text-green-400 mb-2">
                 v2.6.0
               </Text>
-              <Text className="text-sm text-gray-600 mb-4">大小：125 MB</Text>
-              <View className="bg-white p-3 rounded-lg">
-                <Text className="text-xs text-gray-700 font-semibold mb-2">
-                  更新内容：
+              <Text className="text-sm text-gray-600 dark:text-gray-300 mb-4">{t("ota-size")}：125 MB</Text>
+              <View className="bg-white dark:bg-gray-800 p-3 rounded-lg">
+                <Text className="text-xs text-gray-700 dark:text-gray-300 font-semibold mb-2">
+                  {t("ota-update-content")}：
                 </Text>
-                <Text className="text-xs text-gray-600 leading-5">
+                <Text className="text-xs text-gray-600 dark:text-gray-400 leading-5">
                   • 优化电量显示精度{"\n"}• 改进充电效率{"\n"}• 修复已知 BUG
                   {"\n"}• 增强稳定性
                 </Text>
@@ -110,18 +112,18 @@ export default function OTAPage() {
             </View>
 
             {/* 升级说明 */}
-            <View className="bg-gray-50 p-4 rounded-lg">
-              <Text className="text-sm font-semibold text-black mb-3">
-                升级说明
+            <View className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+              <Text className="text-sm font-semibold text-black dark:text-white mb-3">
+                {t("ota-upgrade-instructions")}
               </Text>
-              <Text className="text-xs text-gray-600 leading-1">
-                1. 升级过程需要5-10分钟，请耐心等待。{"\n"}
+              <Text className="text-xs text-gray-600 dark:text-gray-400 leading-1">
+                1. {t("ota-instruction-1")}{"\n"}
                 {"\n"}
-                2. 升级期间设备会自动重启，请勿中断。{"\n"}
+                2. {t("ota-instruction-2")}{"\n"}
                 {"\n"}
-                3. 升级失败会自动恢复到之前版本。{"\n"}
+                3. {t("ota-instruction-3")}{"\n"}
                 {"\n"}
-                4. 升级完成后会自动重启。
+                4. {t("ota-instruction-4")}
               </Text>
             </View>
           </View>
@@ -156,7 +158,7 @@ export default function OTAPage() {
                 }}
               >
                 <Text className="text-white font-semibold text-base">
-                  升级中 {Math.round(progress)}%
+                  {t("ota-updating")} {Math.round(progress)}%
                 </Text>
               </View>
             </View>
@@ -164,7 +166,7 @@ export default function OTAPage() {
         ) : (
           <DeviceActionButtons
             primaryButton={{
-              label: "立即升级",
+              label: t("ota-upgrade-now"),
               backgroundColor: "bg-blue-500 dark:bg-blue-600",
               onPress: handleStartUpdate,
             }}

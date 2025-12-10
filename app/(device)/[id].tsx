@@ -1,5 +1,7 @@
 import DeviceActionButtons from "@/components/ui/device-action-buttons";
 import TopTitle from "@/components/ui/top-title";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useDebouncedNavigation } from "@/hooks/use-debounced-navigation";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
@@ -15,6 +17,7 @@ import {
   Zap,
 } from "lucide-react-native";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import CustomAlert from "../../utils/my-alert";
@@ -34,56 +37,7 @@ interface DeviceDetail {
   addedAt?: string;
 }
 
-const defaultDeviceDetails: Record<string, DeviceDetail> = {
-  "1": {
-    id: "1",
-    name: "迷你充电宝",
-    type: "5000mAh",
-    color: "#3B82F6",
-    capacity: "5000mAh",
-    battery: 85,
-    voltage: "5V/2A",
-    temperature: "25°C",
-    usageTime: "2小时",
-    lastCharged: "2小时前",
-  },
-  "2": {
-    id: "2",
-    name: "中容量充电宝",
-    type: "10000mAh",
-    color: "#10B981",
-    capacity: "10000mAh",
-    battery: 60,
-    voltage: "5V/2A",
-    temperature: "28°C",
-    usageTime: "4小时",
-    lastCharged: "1天前",
-  },
-  "3": {
-    id: "3",
-    name: "大容量充电宝",
-    type: "20000mAh",
-    color: "#F59E0B",
-    capacity: "20000mAh",
-    battery: 92,
-    voltage: "5V/3A",
-    temperature: "24°C",
-    usageTime: "8小时",
-    lastCharged: "3小时前",
-  },
-  "4": {
-    id: "4",
-    name: "超大容量充电宝",
-    type: "30000mAh",
-    color: "#EF4444",
-    capacity: "30000mAh",
-    battery: 100,
-    voltage: "5V/3A",
-    temperature: "22°C",
-    usageTime: "12小时",
-    lastCharged: "30分钟前",
-  },
-};
+const defaultDeviceDetails: Record<string, DeviceDetail> = {};
 
 interface DetailItemProps {
   icon: React.ReactNode;
@@ -92,28 +46,36 @@ interface DetailItemProps {
 }
 
 function DetailItem({ icon, label, value }: DetailItemProps) {
+  const colorScheme = useColorScheme();
   return (
     <LinearGradient
-      colors={["#F9FAFB", "#F9FAFB"]}
+      colors={
+        colorScheme === "dark" ? ["#374151", "#374151"] : ["#F3F4F6", "#F3F4F6"]
+      }
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={{
         borderRadius: 12,
       }}
-      className="flex-row items-center gap-4 p-4 mb-3 border border-gray-200"
+      className="flex-row items-center gap-4 p-4 mb-3"
     >
-      <View className="w-10 h-10 bg-blue-100 rounded-lg items-center justify-center flex-shrink-0">
+      <View className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg items-center justify-center flex-shrink-0">
         {icon}
       </View>
       <View className="flex-1">
-        <Text className="text-xs text-gray-500 font-medium mb-1">{label}</Text>
-        <Text className="text-base font-semibold text-gray-900">{value}</Text>
+        <Text className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">
+          {label}
+        </Text>
+        <Text className="text-base font-semibold text-gray-900 dark:text-white">
+          {value}
+        </Text>
       </View>
     </LinearGradient>
   );
 }
 
 export default function DeviceDetailPage() {
+  const { push } = useDebouncedNavigation(500);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -121,6 +83,8 @@ export default function DeviceDetailPage() {
   const [device, setDevice] = useState<DeviceDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [alertVisible, setAlertVisible] = useState(false);
+  const { t } = useTranslation();
+  const colorScheme = useColorScheme();
   const [alertConfig, setAlertConfig] = useState<{
     title: string;
     message: string;
@@ -133,7 +97,7 @@ export default function DeviceDetailPage() {
   }>({
     title: "",
     message: "",
-    confirmText: "确认",
+    confirmText: t("confirm"),
     showCancel: false,
   });
 
@@ -179,10 +143,10 @@ export default function DeviceDetailPage() {
 
   const handleRemoveDevice = async () => {
     setAlertConfig({
-      title: "确认",
-      message: `是否删除设备 "${device?.name}"?`,
-      confirmText: "删除",
-      cancelText: "取消",
+      title: t("tip"),
+      message: `${t("device-detail-alert-confirm-delete-device")} "${device?.name}"?`,
+      confirmText: t("confirm"),
+      cancelText: t("cancel"),
       primaryColor: "#EF4444",
       showCancel: true,
       onConfirm: async () => {
@@ -202,10 +166,10 @@ export default function DeviceDetailPage() {
           }
         } catch (err) {
           setAlertConfig({
-            title: "错误",
-            message: "删除设备失败",
+            title: t("error"),
+            message: t("device-detail-alert-delete-device-failed"),
             primaryColor: "#EF4444",
-            confirmText: "确定",
+            confirmText: t("confirm"),
             showCancel: false,
             onConfirm: () => setAlertVisible(false),
           });
@@ -225,7 +189,7 @@ export default function DeviceDetailPage() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <TopTitle title={device.name} showBack={true} />
-      <View className="flex-1 bg-white">
+      <View className="flex-1 bg-white dark:bg-black">
         {/* Device Card */}
         <View className="p-4">
           <View
@@ -247,7 +211,9 @@ export default function DeviceDetailPage() {
               className="flex-row items-center gap-1 mt-3"
             >
               <Package size={14} color="white" strokeWidth={2} />
-              <Text className="text-base text-white/80">固件版本 v2.5.1</Text>
+              <Text className="text-base text-white/80">
+                {t("device-detail-ota-version")} v2.5.1
+              </Text>
               <ChevronRight size={16} color="white" strokeWidth={2} />
             </Pressable>
           </View>
@@ -255,7 +221,11 @@ export default function DeviceDetailPage() {
             {/* 电池百分比 */}
             <View style={{ flex: 1 }}>
               <LinearGradient
-                colors={["#EFF6FF", "#DBEAFE"]}
+                colors={
+                  colorScheme === "dark"
+                    ? ["#1E3A8A", "#1E40AF"]
+                    : ["#EFF6FF", "#DBEAFE"]
+                }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={{
@@ -264,15 +234,21 @@ export default function DeviceDetailPage() {
                 }}
               >
                 <View className="flex-row items-center justify-between mb-3">
-                  <Text className="text-xs text-gray-600">电量</Text>
-                  <Battery size={18} color="#3B82F6" strokeWidth={2} />
+                  <Text className="text-xs text-gray-600 dark:text-gray-200">
+                    {t("device-detail-power")}
+                  </Text>
+                  <Battery
+                    size={18}
+                    color={colorScheme === "dark" ? "#60A5FA" : "#3B82F6"}
+                    strokeWidth={2}
+                  />
                 </View>
-                <Text className="text-2xl font-bold text-blue-600 mb-2">
+                <Text className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-2">
                   {device.battery || 0}%
                 </Text>
-                <View className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <View className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                   <View
-                    className="h-full bg-blue-500 rounded-full"
+                    className="h-full bg-blue-500 dark:bg-blue-400 rounded-full"
                     style={{ width: `${device.battery || 0}%` }}
                   />
                 </View>
@@ -282,7 +258,11 @@ export default function DeviceDetailPage() {
             {/* 充放电状态 */}
             <View style={{ flex: 1 }}>
               <LinearGradient
-                colors={["#F0FDF4", "#DCFCE7"]}
+                colors={
+                  colorScheme === "dark"
+                    ? ["#064E3B", "#065F46"]
+                    : ["#F0FDF4", "#DCFCE7"]
+                }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={{
@@ -291,26 +271,40 @@ export default function DeviceDetailPage() {
                 }}
               >
                 <View className="flex-row items-center justify-between mb-3">
-                  <Text className="text-xs text-gray-600">状态</Text>
-                  <Zap size={18} color="#10B981" strokeWidth={2} />
+                  <Text className="text-xs text-gray-600 dark:text-gray-200">
+                    {t("device-detail-status")}
+                  </Text>
+                  <Zap
+                    size={18}
+                    color={colorScheme === "dark" ? "#34D399" : "#10B981"}
+                    strokeWidth={2}
+                  />
                 </View>
-                <Text className="text-lg font-bold text-green-600">充电中</Text>
-                <Text className="text-xs text-green-500 mt-1">剩余 2 小时</Text>
+                <Text className="text-lg font-bold text-green-600 dark:text-green-400">
+                  {t("device-detail-status-charging")}
+                </Text>
+                <Text className="text-xs text-green-500 dark:text-green-400 mt-1">
+                  {t("device-detail-status-time-remaining")} 2 小时
+                </Text>
               </LinearGradient>
             </View>
 
             {/* 定位地图 */}
             <Pressable
               onPress={() =>
-                router.push({
+                push({
                   pathname: "/(device)/map",
-                  params: { lng: "113.9455", lat: "22.5431" },
+                  params: { lng: "120.123", lat: "30.456" },
                 })
               }
               style={{ flex: 1 }}
             >
               <LinearGradient
-                colors={["#FAF5FF", "#F3E8FF"]}
+                colors={
+                  colorScheme === "dark"
+                    ? ["#581C87", "#7C3AED"]
+                    : ["#FAF5FF", "#F3E8FF"]
+                }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={{
@@ -320,15 +314,27 @@ export default function DeviceDetailPage() {
                 }}
               >
                 <View className="flex-row items-center justify-between mb-3">
-                  <Text className="text-xs text-gray-600">位置</Text>
-                  <MapPin size={18} color="#A855F7" strokeWidth={2} />
+                  <Text className="text-xs text-gray-600 dark:text-gray-200">
+                    {t("device-detail-location")}
+                  </Text>
+                  <MapPin
+                    size={18}
+                    color={colorScheme === "dark" ? "#C084FC" : "#A855F7"}
+                    strokeWidth={2}
+                  />
                 </View>
-                <Text className="text-xs text-purple-600 font-semibold mb-2">
+                <Text className="text-xs text-purple-600 dark:text-purple-400 font-semibold mb-2">
                   深圳市南山区
                 </Text>
                 <View className="flex-row items-center">
-                  <Text className="text-xs text-purple-500">查看地图</Text>
-                  <ChevronRight size={14} color="#A855F7" strokeWidth={2} />
+                  <Text className="text-xs text-purple-500 dark:text-purple-400">
+                    {t("device-detail-location-map")}
+                  </Text>
+                  <ChevronRight
+                    size={14}
+                    color={colorScheme === "dark" ? "#C084FC" : "#A855F7"}
+                    strokeWidth={2}
+                  />
                 </View>
               </LinearGradient>
             </Pressable>
@@ -336,7 +342,9 @@ export default function DeviceDetailPage() {
         </View>
 
         <View className="px-4">
-          <Text className="text-2xl font-bold text-black mb-2">设备详情</Text>
+          <Text className="text-2xl font-bold text-black dark:text-white mb-2">
+            {t("device-detail-info-title")}
+          </Text>
         </View>
 
         {/* Details Section */}
@@ -347,39 +355,69 @@ export default function DeviceDetailPage() {
         >
           <View className="p-4">
             <DetailItem
-              icon={<Battery size={20} color="black" />}
-              label="容量"
+              icon={
+                <Battery
+                  size={20}
+                  color={colorScheme === "dark" ? "white" : "black"}
+                />
+              }
+              label={t("device-detail-info-capacity")}
               value={device.capacity || "20000mAh"}
             />
 
             <DetailItem
-              icon={<BatteryPlus size={20} color="black" />}
-              label="电池健康"
+              icon={
+                <BatteryPlus
+                  size={20}
+                  color={colorScheme === "dark" ? "white" : "black"}
+                />
+              }
+              label={t("device-detail-info-battery-health")}
               value={device.batteryHealth || "95%"}
             />
 
             <DetailItem
-              icon={<Zap size={20} color="black" />}
-              label="输出电压"
-              value={device.voltage || "未知"}
+              icon={
+                <Zap
+                  size={20}
+                  color={colorScheme === "dark" ? "white" : "black"}
+                />
+              }
+              label={t("device-detail-info-output-voltage")}
+              value={device.voltage || t("unknown")}
             />
 
             <DetailItem
-              icon={<Thermometer size={20} color="black" />}
-              label="当前温度"
-              value={device.temperature || "未知"}
+              icon={
+                <Thermometer
+                  size={20}
+                  color={colorScheme === "dark" ? "white" : "black"}
+                />
+              }
+              label={t("device-detail-info-current-temperature")}
+              value={device.temperature || t("unknown")}
             />
 
             <DetailItem
-              icon={<Clock size={20} color="black" />}
-              label="使用时长"
-              value={device.usageTime || "未知"}
+              icon={
+                <Clock
+                  size={20}
+                  color={colorScheme === "dark" ? "white" : "black"}
+                />
+              }
+              label={t("device-detail-info-usage-time")}
+              value={device.usageTime || t("unknown")}
             />
 
             <DetailItem
-              icon={<Droplet size={20} color="black" />}
-              label="最后充电"
-              value={device.lastCharged || "未知"}
+              icon={
+                <Droplet
+                  size={20}
+                  color={colorScheme === "dark" ? "white" : "black"}
+                />
+              }
+              label={t("device-detail-info-last-charged")}
+              value={device.lastCharged || t("unknown")}
             />
           </View>
         </ScrollView>
@@ -387,7 +425,7 @@ export default function DeviceDetailPage() {
         {/* Action Buttons */}
         <DeviceActionButtons
           primaryButton={{
-            label: "移除设备",
+            label: t("device-detail-action-delete"),
             backgroundColor: "bg-gray-400 dark:bg-gray-800",
             onPress: handleRemoveDevice,
           }}
@@ -400,8 +438,8 @@ export default function DeviceDetailPage() {
         title={alertConfig.title}
         message={alertConfig.message}
         primaryColor={alertConfig.primaryColor || "#007AFF"}
-        confirmText={alertConfig.confirmText || "确认"}
-        cancelText={alertConfig.cancelText || "取消"}
+        confirmText={alertConfig.confirmText || t("confirm")}
+        cancelText={alertConfig.cancelText || t("cancel")}
         showCancel={alertConfig.showCancel !== false}
         onConfirm={alertConfig.onConfirm || (() => setAlertVisible(false))}
         onCancel={() => setAlertVisible(false)}

@@ -1,5 +1,7 @@
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useDebouncedNavigation } from "@/hooks/use-debounced-navigation";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import {
   CircleOff,
   LayoutGrid,
@@ -8,6 +10,7 @@ import {
   Zap,
 } from "lucide-react-native";
 import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { FlatList, Pressable, ScrollView, Text, View } from "react-native";
 
 interface DeviceItem {
@@ -21,7 +24,9 @@ interface DeviceItem {
 const defaultDevices: DeviceItem[] = [];
 
 export function Device() {
-  const router = useRouter();
+  const { t } = useTranslation();
+  const { push } = useDebouncedNavigation(500);
+  const colorScheme = useColorScheme();
   const [isGridView, setIsGridView] = useState<boolean>(true);
   const [devices, setDevices] = useState<DeviceItem[]>(defaultDevices);
 
@@ -57,7 +62,7 @@ export function Device() {
 
   const renderDeviceCard = ({ item }: { item: DeviceItem }) => (
     <Pressable
-      onPress={() => router.push(`/(device)/${item.id}`)}
+      onPress={() => push(`/(device)/${item.id}`)}
       android_ripple={{ color: "rgba(0, 0, 0, 0.1)" }}
       style={{
         flex: isGridView ? 0.5 : 1,
@@ -84,17 +89,17 @@ export function Device() {
     <View className="flex-1">
       <View className="flex-row items-center justify-between px-6 py-4">
         <Text className="text-2xl font-semibold text-black dark:text-white">
-          我的设备
+          {t("device-title")}
         </Text>
         <View className="flex-row items-center justify-center gap-4">
-          <Pressable onPress={() => router.push("/(device)/add")}>
-            <Plus size={28} color="black" />
+          <Pressable onPress={() => push("/(device)/add")}>
+            <Plus size={28} color={colorScheme === "dark" ? "white" : "black"} />
           </Pressable>
           <Pressable onPress={() => setIsGridView(!isGridView)}>
             {isGridView ? (
-              <LayoutGrid size={24} color="black" />
+              <LayoutGrid size={24} color={colorScheme === "dark" ? "white" : "black"} />
             ) : (
-              <LayoutList size={24} color="black" />
+              <LayoutList size={24} color={colorScheme === "dark" ? "white" : "black"} />
             )}
           </Pressable>
         </View>
@@ -104,12 +109,18 @@ export function Device() {
         {devices.length === 0 ? (
           <View className="flex-1 items-center justify-center py-20">
             <CircleOff size={68} color="#9CA3AF" />
-            <Text className="text-gray-500 text-xl mt-4">暂无设备</Text>
+            <Text className="text-gray-500 text-xl mt-4">
+              {t("device-hint")}
+            </Text>
 
-            <View className="flex-row items-center justify-center mt-2">
-              <Text className="flex text-gray-400 text-base">点击</Text>
-              <Plus size={15} color="black" />
-              <Text className="flex text-gray-400 text-base">添加设备</Text>
+            <View className="flex-row items-center mt-2">
+              <Text className="text-gray-400 text-base">
+                {t("device-add-pre")}
+              </Text>
+              <Plus size={15} color={colorScheme === "dark" ? "white" : "black"} />
+              <Text className="text-gray-400 text-base">
+                {t("device-add-post")}
+              </Text>
             </View>
           </View>
         ) : (
