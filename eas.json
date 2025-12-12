@@ -1,5 +1,4 @@
 {
-	"cli": { "version": ">= 5.0.0" },
 	"build": {
 		"production-aab": {
 			"distribution": "store",
@@ -20,5 +19,6 @@
 		"preview": {
 			"android": { "buildType": "apk" }
 		}
-	}
+	},
+	"cli": { "version": ">= 5.0.0" }
 }

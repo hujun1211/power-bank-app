@@ -42,7 +42,7 @@ export default function LoginPasswordPage() {
 			} else {
 				replace('/(tabs)');
 			}
-		}, 0);
+		}, 1000);
 	};
 
 	return (
