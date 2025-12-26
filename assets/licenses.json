@@ -405,19 +405,6 @@
 	{
 		"department": "kessler",
 		"relatedTo": "stuff",
-		"name": "react-native-amap3d",
-		"licensePeriod": "perpetual",
-		"material": "material",
-		"licenseType": "MIT",
-		"link": "git+https://github.com/qiuxiang/react-native-amap3d.git",
-		"remoteVersion": "3.2.4",
-		"installedVersion": "3.2.4",
-		"definedVersion": "^3.2.4",
-		"author": "7c00 <i@7c00.cc>"
-	},
-	{
-		"department": "kessler",
-		"relatedTo": "stuff",
 		"name": "react-native-ble-plx",
 		"licensePeriod": "perpetual",
 		"material": "material",
