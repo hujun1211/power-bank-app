@@ -4,6 +4,7 @@ import { AlertCircle } from 'lucide-react-native';
 import React from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 
 type CustomAlertProps = {
 	visible: boolean;
@@ -24,13 +25,16 @@ export default function CustomAlert({
 	message,
 	icon,
 	primaryColor = '#007AFF',
-	confirmText = '确认',
-	cancelText = '取消',
+	confirmText,
+	cancelText,
 	onConfirm,
 	onCancel,
 	showCancel = true,
 }: CustomAlertProps) {
 	const colorScheme = useColorScheme();
+	const { t } = useTranslation();
+	const confirmTextValue = confirmText || t('confirm');
+	const cancelTextValue = cancelText || t('cancel');
 	const defaultIcon = (
 		<AlertCircle size={20} color={colorScheme === 'dark' ? 'white' : '#666'} />
 	);
@@ -85,7 +89,7 @@ export default function CustomAlert({
 								}}
 							>
 								<Text className="text-lg font-medium text-gray-600 dark:text-gray-300">
-									{cancelText}
+									{cancelTextValue}
 								</Text>
 							</Pressable>
 						)}
@@ -98,7 +102,7 @@ export default function CustomAlert({
 								className="text-lg font-semibold"
 								style={{ color: primaryColor }}
 							>
-								{confirmText}
+								{confirmTextValue}
 							</Text>
 						</Pressable>
 					</View>

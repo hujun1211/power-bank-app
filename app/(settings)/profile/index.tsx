@@ -1,7 +1,8 @@
 import MenuList, { MenuItem } from '@/components/ui/menu-list';
 import TopTitle from '@/components/ui/top-title';
+import { useDebouncedNavigation } from '@/hooks/use-debounced-navigation';
 import * as Notifications from 'expo-notifications';
-import { Stack, useRouter } from 'expo-router';
+import { Stack } from 'expo-router';
 import { Mail, Phone, User } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, View } from 'react-native';
@@ -18,7 +19,7 @@ Notifications.setNotificationHandler({
 
 export default function ProfilePage() {
 	const { t } = useTranslation();
-	const router = useRouter();
+	const { push: debouncedPush } = useDebouncedNavigation();
 	const handleUsernameClick = async () => {
 		try {
 			// 先请求通知权限
@@ -51,21 +52,21 @@ export default function ProfilePage() {
 			icon: <User size={24} color="#666" />,
 			title: t('settings-profile-username-title'),
 			subtitle: t('settings-profile-username-subtitle'),
-			onPress: () => router.push('/(settings)/profile/username'),
+			onPress: () => debouncedPush('/(settings)/profile/username'),
 		},
 		{
 			id: '2',
 			icon: <Mail size={24} color="#666" />,
 			title: t('settings-profile-email-title'),
 			subtitle: t('settings-profile-email-subtitle'),
-			onPress: () => router.push('/(settings)/profile/email'),
+			onPress: () => debouncedPush('/(settings)/profile/email'),
 		},
 		{
 			id: '3',
 			icon: <Phone size={24} color="#666" />,
 			title: t('settings-profile-phone-title'),
 			subtitle: t('settings-profile-phone-subtitle'),
-			onPress: () => router.push('/(settings)/profile/phone'),
+			onPress: () => debouncedPush('/(settings)/profile/phone'),
 		},
 	];
 

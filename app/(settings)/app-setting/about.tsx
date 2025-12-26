@@ -1,19 +1,24 @@
 import Card from '@/components/ui/card';
+import CustomAlert from '@/components/ui/system-alert';
 import TopTitle from '@/components/ui/top-title';
-import CustomAlert from '@/components/ui/system-alert.tsx';
 import Constants from 'expo-constants';
 import { Stack } from 'expo-router';
 import { Info } from 'lucide-react-native';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Linking, Text, TouchableOpacity, View } from 'react-native';
 
 export default function AboutPage() {
 	const { t } = useTranslation();
 	const [showUpdateAlert, setShowUpdateAlert] = useState(false);
+	const [showI18nAlert, setShowI18nAlert] = useState(false);
 
 	const handleCheckUpdate = () => {
 		setShowUpdateAlert(true);
+	};
+
+	const handleI18n = () => {
+		setShowI18nAlert(true);
 	};
 
 	return (
@@ -53,12 +58,21 @@ export default function AboutPage() {
 									{t('settings-app-setting-about-copyright-value')}
 								</Text>
 							</View>
+
 							<TouchableOpacity onPress={handleCheckUpdate} className="pt-2">
 								<Text className="text-base text-blue-600 dark:text-blue-400">
 									{t('settings-app-setting-about-check-update')}
 								</Text>
 								<Text className="mt-1 text-sm text-gray-500 dark:text-gray-400">
 									{t('settings-app-setting-about-check-update-desc')}
+								</Text>
+							</TouchableOpacity>
+							<TouchableOpacity onPress={handleI18n} className="pt-2">
+								<Text className="text-base text-blue-600 dark:text-blue-400">
+									{t('settings-app-setting-about-i18n')}
+								</Text>
+								<Text className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+									{t('settings-app-setting-about-i18n-value')}
 								</Text>
 							</TouchableOpacity>
 						</View>
@@ -76,6 +90,17 @@ export default function AboutPage() {
 				onCancel={() => setShowUpdateAlert(false)}
 				confirmText={t('update-check')}
 				cancelText={t('cancel')}
+			/>
+			<CustomAlert
+				visible={showI18nAlert}
+				title={t('settings-app-setting-about-i18n-title')}
+				message={t('settings-app-setting-about-i18n-content')}
+				confirmText={t('settings-app-setting-about-i18n-confirm')}
+				onConfirm={() => {
+					Linking.openURL('https://github.com/1Yie/power-bank-rn');
+					setShowI18nAlert(false);
+				}}
+				onCancel={() => setShowI18nAlert(false)}
 			/>
 		</>
 	);

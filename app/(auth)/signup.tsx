@@ -24,7 +24,7 @@ import {
 	View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import CustomAlert from '../../utils/my-alert';
+import CustomAlert from '@/components/ui/system-alert';
 
 export default function SignUpPage() {
 	const insets = useSafeAreaInsets();

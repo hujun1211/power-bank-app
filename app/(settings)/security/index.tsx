@@ -1,41 +1,42 @@
 import MenuList, { MenuItem } from '@/components/ui/menu-list';
 import TopTitle from '@/components/ui/top-title';
-import { Stack, useRouter } from 'expo-router';
+import { useDebouncedNavigation } from '@/hooks/use-debounced-navigation';
+import { Stack } from 'expo-router';
 import { Key, Lock, ShieldCheck, Smartphone } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, View } from 'react-native';
 
 export default function SecurityPage() {
 	const { t } = useTranslation();
-	const router = useRouter();
+	const { push: debouncedPush } = useDebouncedNavigation();
 	const securityItems: MenuItem[] = [
 		{
 			id: '1',
 			icon: <Lock size={24} color="#666" />,
 			title: t('settings-security-password-title'),
 			subtitle: t('settings-security-password-subtitle'),
-			onPress: () => router.push('/(settings)/security/password'),
+			onPress: () => debouncedPush('/(settings)/security/password'),
 		},
 		{
 			id: '2',
 			icon: <Key size={24} color="#666" />,
 			title: t('settings-security-payment-password-title'),
 			subtitle: t('settings-security-payment-password-subtitle'),
-			onPress: () => router.push('/(settings)/security/payment-password'),
+			onPress: () => debouncedPush('/(settings)/security/payment-password'),
 		},
 		{
 			id: '3',
 			icon: <Smartphone size={24} color="#666" />,
 			title: t('settings-security-device-management-title'),
 			subtitle: t('settings-security-device-management-subtitle'),
-			onPress: () => router.push('/(settings)/security/device-management'),
+			onPress: () => debouncedPush('/(settings)/security/device-management'),
 		},
 		{
 			id: '4',
 			icon: <ShieldCheck size={24} color="#666" />,
 			title: t('settings-security-privacy-title'),
 			subtitle: t('settings-security-privacy-subtitle'),
-			onPress: () => router.push('/(settings)/security/privacy'),
+			onPress: () => debouncedPush('/(settings)/security/privacy'),
 		},
 	];
 

@@ -1,22 +1,25 @@
-import DeviceActionButtons from '@/components/ui/device-action-buttons';
-import TopTitle from '@/components/ui/top-title';
 import BottomModal from '@/components/ui/bottom-modal';
+import DeviceActionButtons from '@/components/ui/device-action-buttons';
+import CustomAlert from '@/components/ui/system-alert';
+import TopTitle from '@/components/ui/top-title';
 import BleService from '@/lib/ble-service';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter, Stack } from 'expo-router';
+import { Buffer } from 'buffer';
+import { Stack, useRouter } from 'expo-router';
 import {
 	Bluetooth,
 	Check,
-	Tv,
 	RefreshCw,
+	SearchX,
 	Signal,
 	SignalHigh,
 	SignalLow,
-	SearchX,
+	Tv,
 } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+	ActivityIndicator,
 	Animated,
 	FlatList,
 	PermissionsAndroid,
@@ -27,12 +30,9 @@ import {
 	TextInput,
 	TouchableOpacity,
 	View,
-	ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import WifiManager from 'react-native-wifi-reborn';
-import CustomAlert from '@/components/ui/system-alert.tsx';
-import { Buffer } from 'buffer';
 
 interface BluetoothDevice {
 	id: string;
@@ -41,7 +41,6 @@ interface BluetoothDevice {
 	manufacturerData?: string;
 }
 
-// --- 辅助函数 ---
 const deviceTypeCache = new Map<string, React.FC<any>>();
 
 const getRssiInfo = (rssi: number) => {
@@ -192,7 +191,7 @@ export default function AddDevicePage() {
 		} catch (err: any) {
 			console.error(err);
 			await BleService.disconnect();
-			showAlert(t('error'), '连接失败: ' + err.message, '#EF4444');
+			showAlert(t('error'), 'Connection failed: ' + err.message, '#EF4444');
 			setIsConnecting(false);
 		}
 	};
@@ -203,7 +202,7 @@ export default function AddDevicePage() {
 		const device = BleService.getConnectedDevice();
 		if (!device) {
 			setIsConnecting(false);
-			showAlert(t('error'), '设备已断开', '#EF4444');
+			showAlert(t('error'), 'Device disconnected', '#EF4444');
 			return;
 		}
 
@@ -266,7 +265,7 @@ export default function AddDevicePage() {
 
 				showAlert(
 					t('success'),
-					t('add-device-add-success'),
+					t('add-device-add-success', { deviceName: device.name || device.id }),
 					'#10B981',
 					async () => {
 						await BleService.disconnect();
@@ -275,7 +274,7 @@ export default function AddDevicePage() {
 				);
 			}, 2000);
 		} catch (err: any) {
-			showAlert(t('error'), '配置失败: ' + err.message, '#EF4444');
+			showAlert(t('error'), 'Error: ' + err.message, '#EF4444');
 			await BleService.disconnect();
 			setIsConnecting(false);
 		}
