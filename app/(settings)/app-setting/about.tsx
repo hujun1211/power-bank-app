@@ -97,7 +97,7 @@ export default function AboutPage() {
 				message={t('settings-app-setting-about-i18n-content')}
 				confirmText={t('settings-app-setting-about-i18n-confirm')}
 				onConfirm={() => {
-					Linking.openURL('https://github.com/1Yie/power-bank-rn');
+					Linking.openURL('https://github.com/1Yie/pb-i18n');
 					setShowI18nAlert(false);
 				}}
 				onCancel={() => setShowI18nAlert(false)}
