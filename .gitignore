@@ -45,3 +45,6 @@ app-example
 # outputs
 /build
 /output
+
+*.keystore
+*.jks

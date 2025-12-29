@@ -11,10 +11,29 @@
 		"ios": {
 			"supportsTablet": true,
 			"bundleIdentifier": "cn.xixiu.powerbank",
+			"infoPlist": {
+				// 补充后台模式声明，确保 iOS 系统允许后台通信
+				"UIBackgroundModes": ["bluetooth-central"],
+				"NSBluetoothAlwaysUsageDescription": "我们需要在后台保持与充电宝的连接，以便在您使用其他应用时自动同步充电状态和交换数据。",
+				"NSBluetoothPeripheralUsageDescription": "我们需要使用蓝牙连接周边的充电宝设备。",
+				"NSLocationWhenInUseUsageDescription": "我们需要位置权限来辅助搜索附近的蓝牙设备。"
+			},
 			"buildNumber": "5"
 		},
 		"android": {
 			"package": "cn.xixiu.powerbank",
+			"permissions": [
+				"BLUETOOTH",
+				"BLUETOOTH_ADMIN",
+				"BLUETOOTH_SCAN",
+				"BLUETOOTH_CONNECT",
+				"ACCESS_FINE_LOCATION",
+				"ACCESS_COARSE_LOCATION",
+				"INTERNET",
+				"VIBRATE",
+				"FOREGROUND_SERVICE",
+				"FOREGROUND_SERVICE_CONNECTED_DEVICE"
+			],
 			"adaptiveIcon": {
 				"backgroundColor": "#E6F4FE",
 				"foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -25,11 +44,6 @@
 			"predictiveBackGestureEnabled": false,
 			"versionCode": 5
 		},
-		"web": {
-			"bundler": "metro",
-			"output": "static",
-			"favicon": "./assets/images/favicon.png"
-		},
 		"plugins": [
 			"expo-router",
 			[
@@ -38,16 +52,15 @@
 					"image": "./assets/images/splash-icon.png",
 					"imageWidth": 200,
 					"resizeMode": "contain",
-					"backgroundColor": "#ffffff",
-					"dark": {
-						"backgroundColor": "#000000"
-					}
+					"backgroundColor": "#ffffff"
 				}
 			],
 			[
 				"react-native-ble-plx",
 				{
-					"isBackgroundEnabled": true
+					"isBackgroundEnabled": true,
+					"modes": ["central"], // 除非手机模拟成蓝牙硬件，否则通常只留 central
+					"bluetoothAlwaysPermission": "我们需要在后台保持与充电宝的连接，以便在您使用其他应用时自动同步数据。"
 				}
 			],
 			"expo-localization",
