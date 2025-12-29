@@ -1,6 +1,6 @@
 import fs from 'fs';
-import { fileURLToPath } from 'url';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 // 模拟 __dirname
 const __filename = fileURLToPath(import.meta.url);
