@@ -237,7 +237,7 @@ export default function AddDevicePage() {
 			}
 
 			// 处理BLE错误
-			let errorMessage = '未知错误，请重试';
+			let errorMessage = t('add-device-ble-unknown-error');
 			if (err?.message) {
 				if (err.message.includes('was disconnected')) {
 					errorMessage = t('add-device-ble-disconnected');
