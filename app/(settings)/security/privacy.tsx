@@ -70,7 +70,7 @@ export default function PrivacyPage() {
 				showBack={true}
 			/>
 			<ScrollView className="flex-1 bg-gray-100 dark:bg-black">
-				<View className="mt-6 px-4">
+				<View className="px-4 pt-4">
 					<MenuList items={privacyItems} />
 				</View>
 			</ScrollView>

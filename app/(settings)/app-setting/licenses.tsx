@@ -40,10 +40,9 @@ export default function LicensesScreen() {
 				<FlashList
 					data={formattedLicenses}
 					keyExtractor={(item: any, index) => item.name + index}
+					className="pt-4"
 					contentContainerStyle={{
-						paddingVertical: 12,
 						paddingBottom: insets.bottom,
-						paddingTop: 22,
 					}}
 					renderItem={({ item }: any) => (
 						<View className="mx-4 mb-3 overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">

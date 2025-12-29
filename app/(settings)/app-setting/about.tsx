@@ -25,7 +25,7 @@ export default function AboutPage() {
 		<>
 			<Stack.Screen options={{ headerShown: false }} />
 			<TopTitle title={t('settings-app-setting-about-title')} showBack={true} />
-			<View className="flex-1 bg-gray-100 px-4 pt-6 dark:bg-black">
+			<View className="flex-1 bg-gray-100 px-4 pt-4 dark:bg-black">
 				<Card
 					variant="elevated"
 					title={t('settings-app-setting-about-title')}

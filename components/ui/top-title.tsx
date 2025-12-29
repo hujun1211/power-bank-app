@@ -26,6 +26,7 @@ export default function TopTitle({
 	showMoreMenu = false,
 	menuOptions = [],
 }: TopTitleProps) {
+	const TOP_TITLE_HEIGHT = 50;
 	const insets = useSafeAreaInsets();
 	const router = useRouter();
 	const colorScheme = useColorScheme();
@@ -95,7 +96,7 @@ export default function TopTitle({
 				<Animated.View
 					className="absolute right-4 z-50 min-w-40 rounded-lg border border-gray-200 bg-white shadow-2xl dark:border-gray-600 dark:bg-gray-800"
 					style={{
-						top: insets.top + 50,
+						top: insets.top + (TOP_TITLE_HEIGHT + 10),
 						opacity: fadeAnim,
 					}}
 					pointerEvents="auto"
@@ -143,8 +144,13 @@ export default function TopTitle({
 			)}
 
 			<View
-				className={`absolute left-0 right-0 top-0 z-50 flex-row items-center justify-between border-b border-gray-200 bg-white px-4 py-4 dark:border-gray-700 dark:bg-gray-900 ${backgroundColor}`}
-				style={{ paddingTop: insets.top }}
+				className={`z-50 bg-white  dark:bg-gray-900 ${backgroundColor}`}
+				style={{ height: insets.top }}
+			/>
+
+			<View
+				className={`absolute left-0 right-0 z-50 flex-row items-center justify-between border-b border-gray-200 bg-white px-4 dark:border-gray-700 dark:bg-gray-900 ${backgroundColor}`}
+				style={{ top: insets.top, height: TOP_TITLE_HEIGHT }}
 			>
 				<View className="flex-1 flex-row items-center justify-start gap-3">
 					{showBack && (
@@ -192,7 +198,7 @@ export default function TopTitle({
 								className="absolute inset-0 rounded-full bg-gray-200/60 dark:bg-gray-700/60"
 								style={{
 									opacity: morePressAnim,
-									transform: [{ scale: 1.2 }],
+									transform: [{ scale: 1 }],
 								}}
 							/>
 							<Ellipsis
@@ -203,7 +209,7 @@ export default function TopTitle({
 					)}
 				</View>
 			</View>
-			<View style={{ height: insets.top + 30 }} />
+			<View style={{ height: TOP_TITLE_HEIGHT }} />
 		</>
 	);
 }

@@ -40,7 +40,7 @@ export default function LanguagePage() {
 				title={t('settings-app-setting-language-title')}
 				showBack={true}
 			/>
-			<View className="flex-1 bg-gray-100 px-4 pt-6 dark:bg-black">
+			<View className="flex-1 bg-gray-100 px-4 pt-4 dark:bg-black">
 				<Card
 					variant="elevated"
 					title={t('settings-app-setting-language-change-title')}

@@ -1,7 +1,7 @@
 import Card from '@/components/ui/card';
+import CustomAlert from '@/components/ui/system-alert';
 import TopTitle from '@/components/ui/top-title';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import CustomAlert from '@/components/ui/system-alert.tsx';
 import { Stack } from 'expo-router';
 import { Monitor, Smartphone, Tablet, Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
@@ -94,7 +94,7 @@ export default function DeviceManagementPage() {
 				showBack={true}
 			/>
 			<ScrollView className="flex-1 bg-gray-100 dark:bg-black">
-				<View className="mt-6 px-4">
+				<View className="px-4 pt-4">
 					<Card
 						variant="elevated"
 						title={t('settings-security-device-management-page-title')}

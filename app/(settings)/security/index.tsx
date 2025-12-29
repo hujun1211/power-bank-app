@@ -45,7 +45,7 @@ export default function SecurityPage() {
 			<Stack.Screen options={{ headerShown: false }} />
 			<TopTitle title={t('settings-security-header-title')} showBack={true} />
 			<ScrollView className="flex-1 bg-gray-100 dark:bg-black">
-				<View className="mt-6 px-4">
+				<View className="mt-4 px-4">
 					<MenuList items={securityItems} />
 				</View>
 			</ScrollView>

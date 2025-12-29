@@ -21,7 +21,7 @@ export default function PhonePage() {
 		<>
 			<Stack.Screen options={{ headerShown: false }} />
 			<TopTitle title={t('settings-profile-phone-title')} showBack={true} />
-			<View className="flex-1 bg-gray-100 px-4 pt-6 dark:bg-black">
+			<View className="flex-1 bg-gray-100 px-4 pt-4 dark:bg-black">
 				<Card
 					variant="elevated"
 					title={t('settings-profile-phone-change-title')}
