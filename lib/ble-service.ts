@@ -1,11 +1,11 @@
+import { Buffer } from 'buffer';
+import { Platform } from 'react-native';
 import {
 	BleManager,
-	Device,
 	Characteristic,
+	Device,
 	Subscription,
 } from 'react-native-ble-plx';
-import { Platform } from 'react-native';
-import { Buffer } from 'buffer';
 
 /**
  * BLE 全局服务单例
@@ -99,7 +99,7 @@ class BleService {
 			throw new Error('Device not connected');
 		}
 
-		// 1. 统一构建 Buffer
+		// 统一构建 Buffer
 		// 如果是字符串，按 UTF-8 转 Buffer
 		// 如果是数组 [0x55, 0xAA]，转 Buffer
 		const buffer =

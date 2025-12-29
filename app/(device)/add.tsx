@@ -68,7 +68,7 @@ const getDeviceTypeIcon = (
 			if (buf.length >= 8 && buf[7] === 0x1f) {
 				type = Tv;
 			}
-		} catch (error) {
+		} catch {
 			// ignore
 		}
 	}
@@ -184,14 +184,78 @@ export default function AddDevicePage() {
 			await BleService.stopScan();
 			setIsScanning(false);
 			console.log(`[Page] 正在连接: ${deviceId}`);
-			await BleService.connectAndPrepare(deviceId);
+
+			// 设置20秒连接超时
+			let timeoutOccurred = false;
+			const connectPromise = BleService.connectAndPrepare(deviceId);
+			const timeoutPromise = new Promise<never>((_, reject) => {
+				const timer = setTimeout(async () => {
+					timeoutOccurred = true;
+					console.log('[Page] 连接超时，开始强制断开连接...');
+					try {
+						// 强制取消设备连接
+						await BleService.manager.cancelDeviceConnection(deviceId);
+						console.log('[Page] 强制断开连接完成');
+					} catch (cancelErr: any) {
+						const errorMessage = cancelErr?.message || String(cancelErr);
+						if (
+							errorMessage.includes('Operation was cancelled') ||
+							errorMessage.includes('cancelled')
+						) {
+							console.log('[Page] 连接已被取消');
+						} else {
+							console.error('Cancel connection error:', cancelErr);
+						}
+						// 如果取消失败，尝试 disconnect
+						try {
+							await BleService.disconnect();
+							console.log('[Page] disconnect断开连接完成');
+						} catch (disconnectErr) {
+							console.error('Timeout disconnect error:', disconnectErr);
+						}
+					}
+					reject(new Error('连接超时'));
+				}, 20000);
+				connectPromise.finally(() => {
+					if (!timeoutOccurred) {
+						clearTimeout(timer);
+					}
+				});
+			});
+
+			await Promise.race([connectPromise, timeoutPromise]);
+
 			console.log('[Page] 连接成功，请填写 Wi-Fi 信息');
 			loadWifiList();
 			setShowWifiModal(true);
 		} catch (err: any) {
-			console.error(err);
-			await BleService.disconnect();
-			showAlert(t('error'), 'Connection failed: ' + err.message, '#EF4444');
+			console.error('Connection error:', err);
+			try {
+				await BleService.disconnect();
+			} catch (disconnectErr) {
+				console.error('Disconnect error:', disconnectErr);
+			}
+
+			// 处理BLE错误
+			let errorMessage = '未知错误，请重试';
+			if (err?.message) {
+				if (err.message.includes('was disconnected')) {
+					errorMessage = t('add-device-ble-disconnected');
+				} else if (err.message.includes('timeout')) {
+					errorMessage = t('add-device-ble-timeout');
+				} else if (err.message.includes('permission')) {
+					errorMessage = t('add-device-ble-permission-denied');
+				} else if (
+					err.message.includes('Operation was cancelled') ||
+					err.message.includes('cancelled')
+				) {
+					errorMessage = t('add-device-ble-cancelled');
+				} else {
+					errorMessage = `Error: ${err.message}`;
+				}
+			}
+
+			showAlert(t('error'), errorMessage, '#EF4444');
 			setIsConnecting(false);
 		}
 	};
@@ -446,9 +510,7 @@ export default function AddDevicePage() {
 				{Platform.OS === 'ios' && <View style={{ height: 20 }} />}
 			</BottomModal>
 
-			{/* --- 页面主体：上下分层布局 --- */}
 			<View className="flex-1 bg-gray-50 dark:bg-black">
-				{/* 1. 顶部固定区域：扫描动画 + 提示文字 */}
 				<View
 					className="items-center justify-center pb-4"
 					style={{ marginTop: insets.top, zIndex: 1 }}
@@ -481,9 +543,7 @@ export default function AddDevicePage() {
 					</Text>
 				</View>
 
-				{/* 2. 底部滚动区域：设备列表 */}
 				<View className="w-full flex-1 bg-gray-50 dark:bg-black">
-					{/* 2.1 空状态处理 */}
 					{!isScanning && devices.length === 0 ? (
 						<View className="flex-1 items-center justify-center pb-20 opacity-50">
 							<SearchX size={48} color="#9CA3AF" />
@@ -492,7 +552,6 @@ export default function AddDevicePage() {
 							</Text>
 						</View>
 					) : (
-						/* 2.2 列表渲染 */
 						<FlatList
 							data={devices}
 							keyExtractor={(item) => item.id}
