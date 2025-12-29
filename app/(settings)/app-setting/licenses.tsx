@@ -36,13 +36,14 @@ export default function LicensesScreen() {
 				title={t('settings-app-setting-licenses-title')}
 				showBack={true}
 			/>
-			<View className="flex-1 bg-gray-50 dark:bg-black">
+			<View className="flex-1 bg-gray-100 dark:bg-black">
 				<FlashList
 					data={formattedLicenses}
 					keyExtractor={(item: any, index) => item.name + index}
 					contentContainerStyle={{
 						paddingVertical: 12,
 						paddingBottom: insets.bottom,
+						paddingTop: 22,
 					}}
 					renderItem={({ item }: any) => (
 						<View className="mx-4 mb-3 overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
