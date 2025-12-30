@@ -2,7 +2,7 @@ import TopTitle from '@/components/ui/top-title';
 import { useNotifications } from '@/context/notification-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Stack } from 'expo-router';
-import { BellOff } from 'lucide-react-native';
+import { BellOff, CheckCircle, Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dimensions, Pressable, ScrollView, Text, View } from 'react-native';
@@ -19,13 +19,20 @@ import Reanimated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-interface RightActionsProps {
+interface RightActionBtnProps {
 	progress: SharedValue<number>;
-	onDelete: () => void;
-	deleteLabel: string;
+	onPress: () => void;
+	icon: React.ReactNode;
+	backgroundColor: string;
+	index: number; // 用于处理多个按钮的动画延迟或偏移（可选）
 }
 
-function RightActions({ progress, onDelete, deleteLabel }: RightActionsProps) {
+function ActionButton({
+	progress,
+	onPress,
+	icon,
+	backgroundColor,
+}: RightActionBtnProps) {
 	const animatedStyle = useAnimatedStyle(() => ({
 		opacity: interpolate(progress.value, [0, 1], [0, 1]),
 	}));
@@ -33,13 +40,13 @@ function RightActions({ progress, onDelete, deleteLabel }: RightActionsProps) {
 	return (
 		<Reanimated.View
 			className="ml-2 overflow-hidden rounded-lg"
-			style={[{ width: 80, height: '100%' }, animatedStyle]}
+			style={[{ width: 70, height: '100%' }, animatedStyle]}
 		>
 			<Pressable
-				onPress={onDelete}
-				className="h-full items-center justify-center bg-red-500"
+				onPress={onPress}
+				className={`h-full items-center justify-center ${backgroundColor}`}
 			>
-				<Text className="font-medium text-white">{deleteLabel}</Text>
+				{icon}
 			</Pressable>
 		</Reanimated.View>
 	);
@@ -81,21 +88,17 @@ function getBorderColor(type: string, scheme: string | null | undefined) {
 	return map[type] || map.default;
 }
 
-interface Notification {
-	id: string;
-	title: string;
-	description: string;
-	time: string;
-	type: 'info' | 'warning' | 'success';
-	category: 'system' | 'device' | 'promotion';
-	read: boolean;
-}
-
 export default function NotificationsPage() {
 	const insets = useSafeAreaInsets();
 	const { t } = useTranslation();
 	const colorScheme = useColorScheme();
-	const { notifications, deleteNotification, markAsRead } = useNotifications();
+	const {
+		notifications,
+		deleteNotification,
+		markAsRead,
+		markAllAsRead,
+		deleteAllNotifications,
+	} = useNotifications();
 
 	// Tab 状态
 	const [activeIndex, setActiveIndex] = useState(0);
@@ -143,7 +146,23 @@ export default function NotificationsPage() {
 	return (
 		<View className="flex-1 bg-white dark:bg-black">
 			<Stack.Screen options={{ headerShown: false }} />
-			<TopTitle title={t('notification-header-title')} showBack={true} />
+			<TopTitle
+				title={t('notification-header-title')}
+				showBack={true}
+				showMoreMenu={true}
+				menuOptions={[
+					{
+						label: t('notification-mark-all-read'),
+						icon: <CheckCircle size={20} />,
+						onPress: markAllAsRead,
+					},
+					{
+						label: t('notification-delete-all'),
+						icon: <Trash2 size={20} />,
+						onPress: deleteAllNotifications,
+					},
+				]}
+			/>
 			<View className="px-4 py-4">
 				<View className="relative h-14 w-full flex-row rounded-full bg-gray-100 dark:border-gray-600 dark:bg-gray-800">
 					<Reanimated.View
@@ -216,28 +235,45 @@ export default function NotificationsPage() {
 												friction={2}
 												rightThreshold={40}
 												renderRightActions={(prog) => (
-													<RightActions
-														progress={prog}
-														onDelete={() => deleteNotification(item.id)}
-														deleteLabel={t('notification-delete')}
-													/>
+													<View className="flex-row">
+														{!item.read && (
+															<ActionButton
+																progress={prog}
+																onPress={() => markAsRead(item.id)}
+																backgroundColor="bg-blue-500"
+																icon={<CheckCircle size={22} color="white" />}
+																index={1}
+															/>
+														)}
+														<ActionButton
+															progress={prog}
+															onPress={() => deleteNotification(item.id)}
+															backgroundColor="bg-red-500"
+															icon={<Trash2 size={22} color="white" />}
+															index={0}
+														/>
+													</View>
 												)}
 											>
 												<Pressable
-													onPress={() => markAsRead(item.id)}
 													className={`rounded-lg border-l-4 p-4 ${getBackgroundColor(item.type, colorScheme)} ${getBorderColor(item.type, colorScheme)}`}
 												>
-													<View>
-														<Text className="mb-1 text-base font-bold text-black dark:text-white">
-															{item.title}
-														</Text>
-														<Text className="mb-2 text-sm text-gray-600 dark:text-gray-300">
-															{item.description}
-														</Text>
-														<Text className="text-xs text-gray-500 dark:text-gray-400">
-															{item.time}
-														</Text>
+													<View className="flex-row items-start justify-between">
+														<View className="flex-1">
+															<Text className="mb-1 text-base font-bold text-black dark:text-white">
+																{item.title}
+															</Text>
+															<Text className="mb-2 text-sm text-gray-600 dark:text-gray-300">
+																{item.description}
+															</Text>
+														</View>
+														{!item.read && (
+															<View className="mt-2 h-2 w-2 rounded-full bg-red-500" />
+														)}
 													</View>
+													<Text className="text-xs text-gray-500 dark:text-gray-400">
+														{item.time}
+													</Text>
 												</Pressable>
 											</ReanimatedSwipeable>
 										</View>
