@@ -1,4 +1,5 @@
 import DeviceActionButtons from '@/components/ui/device-action-buttons';
+import CustomAlert from '@/components/ui/system-alert';
 import TopTitle from '@/components/ui/top-title';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useDebouncedNavigation } from '@/hooks/use-debounced-navigation';
@@ -20,7 +21,6 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import CustomAlert from '../../utils/my-alert';
 
 interface DeviceDetail {
 	id: string;

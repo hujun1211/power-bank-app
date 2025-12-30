@@ -1,4 +1,5 @@
 import DeviceActionButtons from '@/components/ui/device-action-buttons';
+import CustomAlert from '@/components/ui/system-alert';
 import TopTitle from '@/components/ui/top-title';
 import { Stack } from 'expo-router';
 import { CheckCircle, Download } from 'lucide-react-native';
@@ -6,7 +7,6 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import CustomAlert from '../../utils/my-alert';
 
 export default function OTAPage() {
 	const insets = useSafeAreaInsets();
