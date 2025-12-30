@@ -8,6 +8,53 @@ import {
 } from 'react-native-ble-plx';
 
 /**
+ * BLE 自定义错误类
+ */
+export class BleError extends Error {
+	public readonly type: BleErrorType;
+	public readonly originalError?: any;
+
+	constructor(type: BleErrorType, message: string, originalError?: any) {
+		super(message);
+		this.name = 'BleError';
+		this.type = type;
+		this.originalError = originalError;
+	}
+}
+
+/**
+ * BLE 错误类型枚举
+ */
+export enum BleErrorType {
+	// 连接相关
+	CONNECTION_FAILED = 'connection_failed',
+	CONNECTION_TIMEOUT = 'connection_timeout',
+	DEVICE_DISCONNECTED = 'device_disconnected',
+	DEVICE_NOT_FOUND = 'device_not_found',
+	SYSTEM_CANCELLATION = 'system_cancellation',
+
+	// 权限相关
+	PERMISSION_DENIED = 'permission_denied',
+	BLUETOOTH_DISABLED = 'bluetooth_disabled',
+
+	// 服务和特征相关
+	SERVICE_NOT_FOUND = 'service_not_found',
+	CHARACTERISTIC_NOT_FOUND = 'characteristic_not_found',
+
+	// 操作相关
+	WRITE_FAILED = 'write_failed',
+	READ_FAILED = 'read_failed',
+	SCAN_FAILED = 'scan_failed',
+	OPERATION_CANCELLED = 'operation_cancelled',
+
+	// 设备相关
+	DEVICE_UNSUPPORTED = 'device_unsupported',
+
+	// 未知错误
+	UNKNOWN = 'unknown',
+}
+
+/**
  * BLE 全局服务单例
  * 负责：
  * - manager 生命周期
@@ -58,11 +105,19 @@ class BleService {
 	 */
 	async connectAndPrepare(deviceId: string): Promise<Device> {
 		try {
-			const device = await this.manager.connectToDevice(deviceId);
+			// 1. 先尝试断开，但要给 Native 留出 500ms 释放资源
+			await this.manager.cancelDeviceConnection(deviceId).catch(() => {});
+			await new Promise((resolve) => setTimeout(resolve, 500));
 
-			this.connectedDevice = device;
+			console.log(`[BleLib] 发起 Native 连接请求: ${deviceId}`);
 
-			// 必须先发现服务和特征，否则后续 monitor/read/write 会随机失败
+			// 2. 连接设备，禁用 autoConnect 提高受控度
+			const device = await this.manager.connectToDevice(deviceId, {
+				autoConnect: false,
+				timeout: 15000,
+			});
+
+			// 3. 发现服务和特征（连接不稳定时会在这里崩掉）
 			await device.discoverAllServicesAndCharacteristics();
 
 			// Android 下提升 MTU，失败也不影响主流程
@@ -74,11 +129,55 @@ class BleService {
 				}
 			}
 
+			this.connectedDevice = device;
 			return device;
-		} catch (error) {
-			// 连接失败时确保内部状态干净
-			this.connectedDevice = null;
-			throw error;
+		} catch (error: any) {
+			const message = error?.message?.toLowerCase() || '';
+
+			// 如果报错是 "Device is already connected"，其实可以认为是成功
+			if (message.includes('already connected')) {
+				try {
+					const device = await this.manager
+						.devices([deviceId])
+						.then((ds) => ds[0]);
+					if (device) {
+						this.connectedDevice = device;
+						return device;
+					}
+				} catch {
+					// 如果获取已连接设备失败，继续抛错
+				}
+			}
+
+			// 只有明确的用户主动取消操作才抛出 OPERATION_CANCELLED
+			// 注意：我们在连接前调用 cancelDeviceConnection 可能会导致一些 'cancelled' 错误，
+			// 但这些不是用户主动取消，应该归类为连接失败
+			if (
+				message.includes('operation was cancelled') &&
+				message.includes('user')
+			) {
+				throw new BleError(
+					BleErrorType.OPERATION_CANCELLED,
+					'Connection was cancelled by user',
+					error
+				);
+			}
+
+			// 其他包含 'cancelled' 的错误可能是系统级别的取消，归类为连接失败
+			if (message.includes('cancelled') || message.includes('destroyed')) {
+				throw new BleError(
+					BleErrorType.SYSTEM_CANCELLATION,
+					'Connection failed due to system cancellation',
+					error
+				);
+			}
+
+			// 其他错误都归类为连接失败
+			throw new BleError(
+				BleErrorType.CONNECTION_FAILED,
+				error.message || 'Connection failed',
+				error
+			);
 		}
 	}
 
@@ -96,7 +195,10 @@ class BleService {
 		withResponse: boolean = true
 	): Promise<Characteristic> {
 		if (!this.connectedDevice) {
-			throw new Error('Device not connected');
+			throw new BleError(
+				BleErrorType.DEVICE_DISCONNECTED,
+				'Device not connected'
+			);
 		}
 
 		// 统一构建 Buffer
@@ -128,9 +230,24 @@ class BleService {
 					base64Data
 				);
 			}
-		} catch (error) {
+		} catch (error: any) {
 			console.error(`[BleLib] 写入失败:`, error);
-			throw error;
+			const message = error?.message?.toLowerCase() || '';
+			if (message.includes('characteristic') && message.includes('not found')) {
+				throw new BleError(
+					BleErrorType.CHARACTERISTIC_NOT_FOUND,
+					'Characteristic not found',
+					error
+				);
+			} else if (message.includes('service') && message.includes('not found')) {
+				throw new BleError(
+					BleErrorType.SERVICE_NOT_FOUND,
+					'Service not found',
+					error
+				);
+			} else {
+				throw new BleError(BleErrorType.WRITE_FAILED, 'Write failed', error);
+			}
 		}
 	}
 
@@ -139,19 +256,44 @@ class BleService {
 	 */
 	async read(serviceUUID: string, charUUID: string): Promise<Buffer> {
 		if (!this.connectedDevice) {
-			throw new Error('Device not connected');
+			throw new BleError(
+				BleErrorType.DEVICE_DISCONNECTED,
+				'Device not connected'
+			);
 		}
 
-		const char = await this.connectedDevice.readCharacteristicForService(
-			serviceUUID,
-			charUUID
-		);
+		try {
+			const char = await this.connectedDevice.readCharacteristicForService(
+				serviceUUID,
+				charUUID
+			);
 
-		if (!char.value) {
-			throw new Error('Empty characteristic value');
+			if (!char.value) {
+				throw new BleError(
+					BleErrorType.READ_FAILED,
+					'Empty characteristic value'
+				);
+			}
+
+			return Buffer.from(char.value, 'base64');
+		} catch (error: any) {
+			const message = error?.message?.toLowerCase() || '';
+			if (message.includes('characteristic') && message.includes('not found')) {
+				throw new BleError(
+					BleErrorType.CHARACTERISTIC_NOT_FOUND,
+					'Characteristic not found',
+					error
+				);
+			} else if (message.includes('service') && message.includes('not found')) {
+				throw new BleError(
+					BleErrorType.SERVICE_NOT_FOUND,
+					'Service not found',
+					error
+				);
+			} else {
+				throw new BleError(BleErrorType.READ_FAILED, 'Read failed', error);
+			}
 		}
-
-		return Buffer.from(char.value, 'base64');
 	}
 
 	/**
@@ -164,7 +306,10 @@ class BleService {
 		onData: (data: Buffer) => void
 	): void {
 		if (!this.connectedDevice) {
-			throw new Error('Device not connected');
+			throw new BleError(
+				BleErrorType.DEVICE_DISCONNECTED,
+				'Device not connected'
+			);
 		}
 
 		const key = `${serviceUUID}-${charUUID}`;
@@ -175,22 +320,42 @@ class BleService {
 			this.monitorSubscriptions.delete(key);
 		}
 
-		const subscription = this.connectedDevice.monitorCharacteristicForService(
-			serviceUUID,
-			charUUID,
-			(error, characteristic) => {
-				// 原生错误只记录，不抛出，避免 JS 崩溃
-				if (error) {
-					return;
-				}
+		try {
+			const subscription = this.connectedDevice.monitorCharacteristicForService(
+				serviceUUID,
+				charUUID,
+				(error, characteristic) => {
+					// 原生错误只记录，不抛出，避免 JS 崩溃
+					if (error) {
+						console.error(`[BleLib] Monitor error for ${key}:`, error);
+						return;
+					}
 
-				if (characteristic?.value) {
-					onData(Buffer.from(characteristic.value, 'base64'));
+					if (characteristic?.value) {
+						onData(Buffer.from(characteristic.value, 'base64'));
+					}
 				}
+			);
+
+			this.monitorSubscriptions.set(key, subscription);
+		} catch (error: any) {
+			const message = error?.message?.toLowerCase() || '';
+			if (message.includes('characteristic') && message.includes('not found')) {
+				throw new BleError(
+					BleErrorType.CHARACTERISTIC_NOT_FOUND,
+					'Characteristic not found',
+					error
+				);
+			} else if (message.includes('service') && message.includes('not found')) {
+				throw new BleError(
+					BleErrorType.SERVICE_NOT_FOUND,
+					'Service not found',
+					error
+				);
+			} else {
+				throw new BleError(BleErrorType.UNKNOWN, 'Monitor failed', error);
 			}
-		);
-
-		this.monitorSubscriptions.set(key, subscription);
+		}
 	}
 
 	/**
@@ -272,10 +437,50 @@ class BleService {
 	}
 
 	/**
+	 * 强制清理所有 BLE 状态
+	 * 用于页面退出或 fatal 错误恢复
+	 */
+	async forceCleanup(): Promise<void> {
+		console.log('[BleService] 强制清理 BLE 状态');
+
+		// 停止扫描
+		try {
+			await this.manager.stopDeviceScan();
+		} catch {
+			// 忽略停止扫描的错误
+		}
+
+		// 断开连接
+		if (this.connectedDevice) {
+			try {
+				await this.connectedDevice.cancelConnection();
+			} catch {
+				// 忽略断开连接的错误
+			}
+		}
+
+		// 停止所有监听
+		this.monitorSubscriptions.forEach((sub) => {
+			try {
+				sub.remove();
+			} catch {}
+		});
+
+		// 重置内部状态
+		this.connectedDevice = null;
+		this.monitorSubscriptions.clear();
+
+		// 等待 native 层清理完成
+		await new Promise((r) => setTimeout(r, 1000));
+
+		console.log('[BleService] BLE 状态清理完成');
+	}
+
+	/**
 	 * 销毁并重建 manager
 	 * 只在应用级重置或 fatal 错误后使用
 	 */
-	async destroyManager(): Promise<void> {
+	destroyManager(): void {
 		try {
 			this.manager.destroy();
 		} catch {}
