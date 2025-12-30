@@ -7,7 +7,8 @@
 		"nativewind",
 		"Pressable",
 		"rssi",
-		"ssids"
+		"ssids",
+		"Swipeable"
 	],
 	"editor.codeActionsOnSave": {
 		"source.fixAll": "explicit",

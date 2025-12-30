@@ -11,6 +11,7 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../i18n';
@@ -62,37 +63,42 @@ export default function RootLayout() {
 	}
 
 	return (
-		<OnboardingContext.Provider
-			value={{ hasSeenIntro, setHasSeenIntro: (val) => setHasSeenIntro(val) }}
-		>
-			<SafeAreaProvider>
-				<ActionSheetProvider>
-					<ThemeProvider
-						value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
-					>
-						<Stack
-							screenOptions={{
-								headerShown: false,
-								animation: 'slide_from_right',
-							}}
+		<GestureHandlerRootView style={{ flex: 1 }}>
+			<OnboardingContext.Provider
+				value={{ hasSeenIntro, setHasSeenIntro: (val) => setHasSeenIntro(val) }}
+			>
+				<SafeAreaProvider>
+					<ActionSheetProvider>
+						<ThemeProvider
+							value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
 						>
-							<Stack.Screen name="(welcome)" options={{ animation: 'fade' }} />
+							<Stack
+								screenOptions={{
+									headerShown: false,
+									animation: 'slide_from_right',
+								}}
+							>
+								<Stack.Screen
+									name="(welcome)"
+									options={{ animation: 'fade' }}
+								/>
 
-							<Stack.Screen
-								name="(tabs)"
-								options={{ animation: 'slide_from_right' }}
-							/>
+								<Stack.Screen
+									name="(tabs)"
+									options={{ animation: 'slide_from_right' }}
+								/>
 
-							<Stack.Screen
-								name="(auth)"
-								options={{ animation: 'fade_from_bottom' }}
-							/>
-						</Stack>
+								<Stack.Screen
+									name="(auth)"
+									options={{ animation: 'fade_from_bottom' }}
+								/>
+							</Stack>
 
-						<StatusBar style="auto" />
-					</ThemeProvider>
-				</ActionSheetProvider>
-			</SafeAreaProvider>
-		</OnboardingContext.Provider>
+							<StatusBar style="auto" />
+						</ThemeProvider>
+					</ActionSheetProvider>
+				</SafeAreaProvider>
+			</OnboardingContext.Provider>
+		</GestureHandlerRootView>
 	);
 }

@@ -3,8 +3,43 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Stack } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Animated, Pressable, ScrollView, Text, View } from 'react-native';
+import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import Reanimated, {
+	interpolate,
+	SharedValue,
+	useAnimatedStyle,
+} from 'react-native-reanimated';
+
+interface RightActionsProps {
+	progress: SharedValue<number>;
+	onDelete: () => void;
+	deleteLabel: string;
+}
+
+function RightActions({ progress, onDelete, deleteLabel }: RightActionsProps) {
+	const animatedStyle = useAnimatedStyle(() => {
+		const opacity = interpolate(progress.value, [0, 1], [0, 1]);
+		return {
+			opacity,
+		};
+	});
+
+	return (
+		<Reanimated.View
+			style={[{ width: 100, height: '100%', paddingLeft: 8 }, animatedStyle]}
+		>
+			<Pressable
+				onPress={onDelete}
+				className="h-full items-center justify-center rounded-lg bg-red-500 px-4"
+			>
+				<Text className="font-medium text-white">{deleteLabel}</Text>
+			</Pressable>
+		</Reanimated.View>
+	);
+}
 
 interface Notification {
 	id: string;
@@ -112,6 +147,24 @@ export default function NotificationsPage() {
 	const [activeTab, setActiveTab] = useState<
 		'all' | 'system' | 'device' | 'promotion'
 	>('all');
+	const [notifications, setNotifications] = useState(mockNotifications);
+	const [fadeAnims, setFadeAnims] = useState<{ [key: string]: Animated.Value }>(
+		{}
+	);
+
+	const deleteNotification = (id: string) => {
+		const anim = fadeAnims[id] || new Animated.Value(1);
+		Animated.timing(anim, {
+			toValue: 0,
+			duration: 300,
+			useNativeDriver: true,
+		}).start(() => {
+			setNotifications((prev) =>
+				prev.filter((notification) => notification.id !== id)
+			);
+		});
+		setFadeAnims((prev) => ({ ...prev, [id]: anim }));
+	};
 
 	const tabs = [
 		{ id: 'all', label: t('notification-tab-all'), key: 'all' as const },
@@ -164,33 +217,53 @@ export default function NotificationsPage() {
 					</View>
 				</View>
 				<ScrollView className="flex-1 bg-white dark:bg-black">
-					{/* Notifications List */}
 					<View
 						className="gap-3 p-4"
 						style={{ paddingBottom: insets.bottom + 20 }}
 					>
-						{mockNotifications.length > 0 ? (
-							mockNotifications.map((notification) => (
-								<Pressable
-									key={notification.id}
-									className={`rounded-lg p-4 ${getBackgroundColor(notification.type, colorScheme || 'light')} ${getBorderColor(notification.type, colorScheme || 'light')}`}
-									onPress={() => {}}
-								>
-									<View className="flex-row items-start justify-between">
-										<View className="flex-1">
-											<Text className="mb-1 text-base font-bold text-black dark:text-white">
-												{notification.title}
-											</Text>
-											<Text className="mb-2 text-sm text-gray-600 dark:text-gray-300">
-												{notification.description}
-											</Text>
-											<Text className="text-xs text-gray-500 dark:text-gray-400">
-												{notification.time}
-											</Text>
-										</View>
+						{notifications.length > 0 ? (
+							notifications.map((notification) => {
+								const fadeAnim =
+									fadeAnims[notification.id] || new Animated.Value(1);
+								return (
+									<View
+										key={notification.id}
+										className="overflow-hidden rounded-lg"
+									>
+										<ReanimatedSwipeable
+											renderRightActions={(progress) => (
+												<RightActions
+													progress={progress}
+													onDelete={() => deleteNotification(notification.id)}
+													deleteLabel={t('notification-delete')}
+												/>
+											)}
+											rightThreshold={40}
+										>
+											<Animated.View style={{ opacity: fadeAnim }}>
+												<Pressable
+													className={`rounded-lg p-4 ${getBackgroundColor(notification.type, colorScheme || 'light')} ${getBorderColor(notification.type, colorScheme || 'light')}`}
+													onPress={() => {}}
+												>
+													<View className="flex-row items-start justify-between">
+														<View className="flex-1">
+															<Text className="mb-1 text-base font-bold text-black dark:text-white">
+																{notification.title}
+															</Text>
+															<Text className="mb-2 text-sm text-gray-600 dark:text-gray-300">
+																{notification.description}
+															</Text>
+															<Text className="text-xs text-gray-500 dark:text-gray-400">
+																{notification.time}
+															</Text>
+														</View>
+													</View>
+												</Pressable>
+											</Animated.View>
+										</ReanimatedSwipeable>
 									</View>
-								</Pressable>
-							))
+								);
+							})
 						) : (
 							<View className="items-center justify-center py-12">
 								<Text className="text-lg text-gray-500 dark:text-gray-400">
