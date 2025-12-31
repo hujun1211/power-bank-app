@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import {
+	ArrowDownUp,
 	Battery,
 	BatteryPlus,
 	ChevronDown,
@@ -17,7 +18,6 @@ import {
 	Droplet,
 	MapPin,
 	Package,
-	Paintbrush,
 	Thermometer,
 	Zap,
 } from 'lucide-react-native';
@@ -25,7 +25,6 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
 // 定义存储 Key
 const STORAGE_KEY_SORT_ORDER = 'device_detail_sort_order';
 
@@ -120,7 +119,7 @@ export default function DeviceDetailPage() {
 		showCancel: false,
 	});
 
-	// --- 新增：加载保存的排序 ---
+	// 加载保存的排序
 	useEffect(() => {
 		const loadSortOrder = async () => {
 			try {
@@ -135,7 +134,7 @@ export default function DeviceDetailPage() {
 		loadSortOrder();
 	}, []);
 
-	// --- 新增：更新顺序并保存到本地 ---
+	// 更新顺序并保存到本地
 	const updateItemOrder = async (newOrder: string[]) => {
 		setItemOrder(newOrder); // 更新 UI
 		try {
@@ -457,7 +456,7 @@ export default function DeviceDetailPage() {
 							onPress={() => setSettingsModalVisible(true)}
 							className="rounded-full bg-gray-100 p-2 dark:bg-gray-800"
 						>
-							<Paintbrush
+							<ArrowDownUp
 								size={20}
 								color={colorScheme === 'dark' ? 'white' : 'black'}
 							/>
@@ -508,6 +507,7 @@ export default function DeviceDetailPage() {
 					<Text className="mb-2 text-sm text-gray-500 dark:text-gray-400">
 						{t('device-detail-settings-description')}
 					</Text>
+
 					{itemOrder.map((key, index) => {
 						const labels = {
 							capacity: t('device-detail-info-capacity'),
