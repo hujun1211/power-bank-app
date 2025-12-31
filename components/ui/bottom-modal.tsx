@@ -1,14 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import { X } from 'lucide-react-native';
+import React, { useEffect, useRef, useState } from 'react';
 import {
+	Animated,
+	Dimensions,
+	Easing,
+	Keyboard,
 	Modal,
+	Platform,
 	Pressable,
 	Text,
 	TouchableOpacity,
 	TouchableWithoutFeedback,
 	View,
-	Keyboard,
 } from 'react-native';
-import { X } from 'lucide-react-native';
 
 interface BottomModalProps {
 	visible: boolean;
@@ -18,6 +22,8 @@ interface BottomModalProps {
 	showCloseButton?: boolean;
 }
 
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+
 export default function BottomModal({
 	visible,
 	onClose,
@@ -26,13 +32,38 @@ export default function BottomModal({
 	showCloseButton = true,
 }: BottomModalProps) {
 	const [keyboardHeight, setKeyboardHeight] = useState(0);
+	const [showModal, setShowModal] = useState(visible);
+	const animValue = useRef(new Animated.Value(0)).current;
 
 	useEffect(() => {
-		const showListener = Keyboard.addListener('keyboardDidShow', (e) =>
-			setKeyboardHeight(e.endCoordinates.height)
+		if (visible) {
+			setShowModal(true);
+			Animated.timing(animValue, {
+				toValue: 1,
+				duration: 500,
+				useNativeDriver: true,
+				easing: Easing.out(Easing.cubic),
+			}).start();
+		} else {
+			Animated.timing(animValue, {
+				toValue: 0,
+				duration: 400,
+				useNativeDriver: true,
+				easing: Easing.in(Easing.cubic),
+			}).start(() => {
+				setShowModal(false);
+			});
+		}
+	}, [visible, animValue]);
+
+	useEffect(() => {
+		const showListener = Keyboard.addListener(
+			Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+			(e) => setKeyboardHeight(e.endCoordinates.height)
 		);
-		const hideListener = Keyboard.addListener('keyboardDidHide', () =>
-			setKeyboardHeight(0)
+		const hideListener = Keyboard.addListener(
+			Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+			() => setKeyboardHeight(0)
 		);
 		return () => {
 			showListener.remove();
@@ -40,46 +71,71 @@ export default function BottomModal({
 		};
 	}, []);
 
+	const backdropOpacity = animValue.interpolate({
+		inputRange: [0, 1],
+		outputRange: [0, 0.5],
+	});
+
+	const slideY = animValue.interpolate({
+		inputRange: [0, 1],
+		outputRange: [SCREEN_HEIGHT, 0],
+	});
+
 	return (
 		<Modal
-			visible={visible}
+			visible={showModal}
 			transparent={true}
-			animationType="fade"
+			animationType="none"
 			onRequestClose={onClose}
 		>
-			<Pressable
-				style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }}
-				onPress={onClose}
+			<Animated.View
+				style={{
+					position: 'absolute',
+					top: 0,
+					bottom: 0,
+					left: 0,
+					right: 0,
+					backgroundColor: 'black',
+					opacity: backdropOpacity,
+				}}
 			>
-				<TouchableWithoutFeedback>
-					<View
-						className="w-full rounded-t-3xl bg-white p-6 pb-8 shadow-2xl dark:bg-gray-900"
-						style={{
-							position: 'absolute',
-							bottom: keyboardHeight,
-							left: 0,
-							right: 0,
-						}}
-					>
-						{/* 标题栏 */}
-						{title && (
-							<View className="mb-4 flex-row items-center justify-between">
-								<Text className="text-xl font-bold text-gray-900 dark:text-white">
-									{title}
-								</Text>
-								{showCloseButton && (
-									<TouchableOpacity onPress={onClose} className="p-2">
-										<X size={24} color="#9CA3AF" />
-									</TouchableOpacity>
-								)}
-							</View>
-						)}
+				<Pressable style={{ flex: 1 }} onPress={onClose} />
+			</Animated.View>
 
-						{/* 内容 */}
-						{children}
-					</View>
-				</TouchableWithoutFeedback>
-			</Pressable>
+			<View
+				style={{
+					flex: 1,
+					justifyContent: 'flex-end',
+					paddingBottom: keyboardHeight,
+				}}
+				pointerEvents="box-none"
+			>
+				<Animated.View
+					style={{
+						transform: [{ translateY: slideY }],
+					}}
+				>
+					<Pressable onPress={() => {}}>
+						<TouchableWithoutFeedback>
+							<View className="w-full rounded-t-3xl bg-white p-6 pb-8 shadow-2xl dark:bg-gray-900">
+								{title && (
+									<View className="mb-4 flex-row items-center justify-between">
+										<Text className="text-xl font-bold text-gray-900 dark:text-white">
+											{title}
+										</Text>
+										{showCloseButton && (
+											<TouchableOpacity onPress={onClose} className="p-2">
+												<X size={24} color="#9CA3AF" />
+											</TouchableOpacity>
+										)}
+									</View>
+								)}
+								{children}
+							</View>
+						</TouchableWithoutFeedback>
+					</Pressable>
+				</Animated.View>
+			</View>
 		</Modal>
 	);
 }
