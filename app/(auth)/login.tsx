@@ -1,6 +1,6 @@
+import CustomAlert from '@/components/ui/system-alert';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useDebouncedNavigation } from '@/hooks/use-debounced-navigation';
-import CustomAlert from '@/components/ui/system-alert.tsx';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, KeyRound, Smartphone } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
