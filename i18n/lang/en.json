@@ -74,6 +74,8 @@
 	"device-detail-location-map": "View Map",
 	"device-detail-ota-version": "Firmware Version",
 	"device-detail-power": "Battery",
+	"device-detail-settings-description": "Adjust the order of items using the up and down buttons",
+	"device-detail-settings-sort": "Sort Settings",
 	"device-detail-status": "Status",
 	"device-detail-status-charging": "Charging",
 	"device-detail-status-time-remaining": "Remaining",
