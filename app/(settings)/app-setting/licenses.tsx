@@ -4,7 +4,7 @@ import { FlashList } from '@shopify/flash-list';
 import { Stack } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Linking, Text, TouchableOpacity, View } from 'react-native';
+import { Linking, Platform, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
@@ -42,7 +42,7 @@ export default function LicensesScreen() {
 					keyExtractor={(item: any, index) => item.name + index}
 					className="pt-4"
 					contentContainerStyle={{
-						paddingBottom: insets.bottom,
+						paddingBottom: Platform.OS === 'ios' ? insets.bottom : insets.top,
 					}}
 					renderItem={({ item }: any) => (
 						<View className="mx-4 mb-3 overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">

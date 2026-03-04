@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { FileLogger } from 'react-native-file-logger';
 import '../i18n';
 import './global.css';
 
@@ -32,6 +33,8 @@ export default function RootLayout() {
 	const [hasSeenIntro, setHasSeenIntro] = useState<boolean | null>(null);
 
 	useEffect(() => {
+		FileLogger.configure();
+
 		async function checkOnboardingStatus() {
 			try {
 				const introValue = await AsyncStorage.getItem('hasSeenIntro');
@@ -77,6 +80,8 @@ export default function RootLayout() {
 								<Stack
 									screenOptions={{
 										headerShown: false,
+										gestureEnabled: true,
+										gestureDirection: 'horizontal',
 										animation: 'slide_from_right',
 									}}
 								>

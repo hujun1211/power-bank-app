@@ -150,17 +150,34 @@ export default function AddDevicePage() {
 
 	// 权限检查
 	const checkPermissions = async () => {
-		if (Platform.OS === 'android' && Platform.Version >= 31) {
-			const result = await PermissionsAndroid.requestMultiple([
-				PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
-				PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
-				PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-			]);
-			return Object.values(result).every(
+		if (Platform.OS !== 'android') return true;
+
+		try {
+			const apiLevel = Platform.Version;
+			let permissionsToRequest = [];
+
+			if (apiLevel >= 31) {
+				permissionsToRequest = [
+					PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+					PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+					PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+				];
+			} else {
+				permissionsToRequest = [
+					PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+				];
+			}
+			const result =
+				await PermissionsAndroid.requestMultiple(permissionsToRequest);
+			const isAllGranted = Object.values(result).every(
 				(res) => res === PermissionsAndroid.RESULTS.GRANTED
 			);
+
+			return isAllGranted;
+		} catch (err: any) {
+			showAlert(t('error'), err.message);
+			return false;
 		}
-		return true;
 	};
 
 	// 扫描逻辑
@@ -696,7 +713,7 @@ export default function AddDevicePage() {
 				title={t('add-device-choose-wifi')}
 			>
 				<View className="mb-4">
-					<View className="mb-2 flex-row items-center justify-between">
+					<View className="mb-2 flex-row items-center justify-between pt-4">
 						<Text className="text-sm font-semibold text-gray-500">
 							{t('add-device-choose-wifi-ssid-list')}
 						</Text>
@@ -755,7 +772,7 @@ export default function AddDevicePage() {
 						{t('add-device-choose-wifi-submit')}
 					</Text>
 				</TouchableOpacity>
-				{Platform.OS === 'ios' && <View style={{ height: 20 }} />}
+				<View style={{ height: insets.bottom }} />
 			</BottomModal>
 
 			<View className="flex-1 bg-gray-50 dark:bg-black">
@@ -847,7 +864,7 @@ export default function AddDevicePage() {
 							numColumns={2}
 							columnWrapperStyle={{
 								justifyContent: 'space-between',
-								gap: 12, // 列间距
+								gap: 12,
 							}}
 							contentContainerStyle={{
 								paddingHorizontal: 16,

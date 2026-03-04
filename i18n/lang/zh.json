@@ -31,7 +31,7 @@
 	"add-device-ble-timeout": "连接超时，请重试",
 	"add-device-ble-timeout-tip": "请检查设备状态，确保设备在附近且蓝牙已开启",
 	"add-device-ble-unknown-error": "未知蓝牙错误",
-	"add-device-ble-unknown-error-tip": "请重启设备和应用后重试",
+	"add-device-ble-unknown-error-tip": "检查权限是否开启，请重启设备或应用后重试",
 	"add-device-ble-write-failed": "数据写入失败",
 	"add-device-ble-write-failed-tip": "请检查设备连接状态，确保设备未断开",
 	"add-device-choose-wifi": "选择 Wi-Fi 网络",

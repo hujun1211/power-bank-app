@@ -332,9 +332,9 @@ export default function DeviceDetailPage() {
 							<ChevronRight size={16} color="white" strokeWidth={2} />
 						</Pressable>
 					</View>
-					<View className="mb-2 flex-row " style={{ gap: 12 }}>
+					<View className="mb-2 flex-row items-stretch" style={{ gap: 12 }}>
 						{/* 电池百分比 */}
-						<View style={{ flex: 1 }}>
+						<View style={{ flex: 1, height: 100 }}>
 							<LinearGradient
 								colors={
 									colorScheme === 'dark'
@@ -346,10 +346,16 @@ export default function DeviceDetailPage() {
 								style={{
 									padding: 16,
 									borderRadius: 16,
+									height: '100%',
+									justifyContent: 'space-between',
 								}}
 							>
 								<View className="mb-3 flex-row items-center justify-between">
-									<Text className="text-xs text-gray-600 dark:text-gray-200">
+									<Text
+										numberOfLines={1}
+										ellipsizeMode="tail"
+										className="text-xs text-gray-600 dark:text-gray-200"
+									>
 										{t('device-detail-power')}
 									</Text>
 									<Battery
@@ -371,7 +377,7 @@ export default function DeviceDetailPage() {
 						</View>
 
 						{/* 充放电状态 */}
-						<View style={{ flex: 1 }}>
+						<View style={{ flex: 1, height: 100 }}>
 							<LinearGradient
 								colors={
 									colorScheme === 'dark'
@@ -383,10 +389,16 @@ export default function DeviceDetailPage() {
 								style={{
 									padding: 16,
 									borderRadius: 16,
+									height: '100%',
+									justifyContent: 'space-between',
 								}}
 							>
 								<View className="mb-3 flex-row items-center justify-between">
-									<Text className="text-xs text-gray-600 dark:text-gray-200">
+									<Text
+										numberOfLines={1}
+										ellipsizeMode="tail"
+										className="text-xs text-gray-600 dark:text-gray-200"
+									>
 										{t('device-detail-status')}
 									</Text>
 									<Zap
@@ -398,8 +410,12 @@ export default function DeviceDetailPage() {
 								<Text className="text-lg font-bold text-green-600 dark:text-green-400">
 									{t('device-detail-status-charging')}
 								</Text>
-								<Text className="mt-1 text-xs text-green-500 dark:text-green-400">
-									{t('device-detail-status-time-remaining')} 2 小时
+								<Text
+									numberOfLines={1}
+									ellipsizeMode="tail"
+									className="mt-1 text-xs text-green-500 dark:text-green-400"
+								>
+									{t('device-detail-status-time-remaining')}
 								</Text>
 							</LinearGradient>
 						</View>
@@ -412,7 +428,7 @@ export default function DeviceDetailPage() {
 									params: { lng: '120.123', lat: '30.456' },
 								})
 							}
-							style={{ flex: 1 }}
+							style={{ flex: 1, height: 100 }}
 						>
 							<LinearGradient
 								colors={
@@ -425,11 +441,16 @@ export default function DeviceDetailPage() {
 								style={{
 									padding: 16,
 									borderRadius: 16,
-									flex: 1,
+									height: '100%',
+									justifyContent: 'space-between',
 								}}
 							>
 								<View className="mb-3 flex-row items-center justify-between">
-									<Text className="text-xs text-gray-600 dark:text-gray-200">
+									<Text
+										numberOfLines={1}
+										ellipsizeMode="tail"
+										className="text-xs text-gray-600 dark:text-gray-200"
+									>
 										{t('device-detail-location')}
 									</Text>
 									<MapPin
@@ -438,11 +459,19 @@ export default function DeviceDetailPage() {
 										strokeWidth={2}
 									/>
 								</View>
-								<Text className="mb-2 text-xs font-semibold text-purple-600 dark:text-purple-400">
+								<Text
+									numberOfLines={1}
+									ellipsizeMode="tail"
+									className="mb-2 text-xs font-semibold text-purple-600 dark:text-purple-400"
+								>
 									深圳市南山区
 								</Text>
 								<View className="flex-row items-center">
-									<Text className="text-xs text-purple-500 dark:text-purple-400">
+									<Text
+										numberOfLines={1}
+										ellipsizeMode="tail"
+										className="text-xs text-purple-500 dark:text-purple-400"
+									>
 										{t('device-detail-location-map')}
 									</Text>
 									<ChevronRight
@@ -456,8 +485,8 @@ export default function DeviceDetailPage() {
 					</View>
 				</View>
 
-				<View className="px-4">
-					<View className="mb-2 flex-row items-center justify-between">
+				<View className="px-4 ">
+					<View className="mb-1 flex-row items-center justify-between ">
 						<Text className="text-2xl font-bold text-black dark:text-white">
 							{t('device-detail-info-title')}
 						</Text>
@@ -474,11 +503,11 @@ export default function DeviceDetailPage() {
 				</View>
 
 				<ScrollView
-					className="flex-1"
+					className="flex-1 "
 					showsVerticalScrollIndicator={false}
 					style={{ paddingBottom: insets.bottom }}
 				>
-					<View className="p-4">
+					<View className="p-4 ">
 						{itemOrder.map((key) => renderDetailItem(key))}
 					</View>
 				</ScrollView>

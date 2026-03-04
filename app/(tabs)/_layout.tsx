@@ -5,7 +5,7 @@ import { Tabs, useFocusEffect } from 'expo-router';
 import { Home, User } from 'lucide-react-native';
 import React, { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BackHandler, Platform, ToastAndroid } from 'react-native';
+import { AppState, BackHandler, Platform, ToastAndroid } from 'react-native';
 import RNExitApp from 'react-native-exit-app';
 
 export default function TabLayout() {
@@ -23,17 +23,20 @@ export default function TabLayout() {
 				const now = Date.now();
 
 				/*
-				 * 直接调用 BackHandler.exitApp() 再启动应用会丢失动画
-				 * 先调用 BackHandler.exitApp() 然后使用异步 RNExitApp.exitApp() 杀进程
-				 * TODO: BackHandler.exitApp() 修复此问题后可移除 RNExitApp 相关代码
+				 * Android 上仅调用 BackHandler.exitApp() 时，冷启动后偶现页面过渡动画丢失。
 				 */
 				if (lastBackPress.current && now - lastBackPress.current < 2000) {
+					const subscription = AppState.addEventListener(
+						'change',
+						(nextAppState) => {
+							if (nextAppState === 'background') {
+								RNExitApp.exitApp();
+								subscription.remove();
+							}
+						}
+					);
+
 					BackHandler.exitApp();
-
-					setTimeout(() => {
-						RNExitApp.exitApp();
-					}, 0);
-
 					return true;
 				}
 
