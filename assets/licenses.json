@@ -306,7 +306,7 @@
 		"material": "material",
 		"licenseType": "MIT",
 		"link": "git+https://github.com/i18next/i18next.git",
-		"remoteVersion": "25.8.17",
+		"remoteVersion": "25.8.18",
 		"installedVersion": "25.7.2",
 		"definedVersion": "^25.7.2",
 		"author": "Jan Mühlemann <jan.muehlemann@gmail.com> (https://github.com/jamuhl)"
@@ -384,7 +384,7 @@
 		"material": "material",
 		"licenseType": "MIT",
 		"link": "git+https://github.com/i18next/react-i18next.git",
-		"remoteVersion": "16.5.6",
+		"remoteVersion": "16.5.8",
 		"installedVersion": "16.4.0",
 		"definedVersion": "^16.4.0",
 		"author": "Jan Mühlemann <jan.muehlemann@gmail.com> (https://github.com/jamuhl)"
@@ -475,7 +475,7 @@
 		"material": "material",
 		"licenseType": "MIT",
 		"link": "git+https://github.com/react-native-maps/react-native-maps.git",
-		"remoteVersion": "1.27.1",
+		"remoteVersion": "1.27.2",
 		"installedVersion": "1.26.20",
 		"definedVersion": "^1.26.20",
 		"author": "Leland Richardson <leland.m.richardson@gmail.com>"
