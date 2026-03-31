@@ -5,8 +5,7 @@ import { Tabs, useFocusEffect } from 'expo-router';
 import { Home, User } from 'lucide-react-native';
 import React, { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AppState, BackHandler, Platform, ToastAndroid } from 'react-native';
-import RNExitApp from 'react-native-exit-app';
+import { BackHandler, Platform, ToastAndroid } from 'react-native';
 
 export default function TabLayout() {
 	const colorScheme = useColorScheme();
@@ -26,16 +25,6 @@ export default function TabLayout() {
 				 * Android 上仅调用 BackHandler.exitApp() 时，冷启动后偶现页面过渡动画丢失。
 				 */
 				if (lastBackPress.current && now - lastBackPress.current < 2000) {
-					const subscription = AppState.addEventListener(
-						'change',
-						(nextAppState) => {
-							if (nextAppState === 'background') {
-								RNExitApp.exitApp();
-								subscription.remove();
-							}
-						}
-					);
-
 					BackHandler.exitApp();
 					return true;
 				}

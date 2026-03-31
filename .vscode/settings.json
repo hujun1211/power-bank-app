@@ -15,6 +15,10 @@
 		"source.organizeImports": "explicit",
 		"source.sortMembers": "explicit"
 	},
+	"i18n-ally.defaultLocale": "zh",
+	"i18n-ally.displayLanguage": "zh",
+	"i18n-ally.keystyle": "flat",
+	"i18n-ally.localesPaths": ["i18n/lang"],
 	"java.compile.nullAnalysis.mode": "automatic",
 	"java.configuration.updateBuildConfiguration": "automatic"
 }

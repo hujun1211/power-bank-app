@@ -20,7 +20,7 @@ export default function HomeScreen() {
 			locations={[0, 0.3, 1]}
 			start={{ x: 0, y: 0 }}
 			end={{ x: 0, y: 0.6 }}
-			className="flex-1"
+			style={{ flex: 1 }}
 		>
 			<View className="flex-1">
 				<Header />
