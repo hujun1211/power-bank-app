@@ -1,7 +1,7 @@
 {
 	"expo": {
 		"name": "Power Bank",
-		"slug": "powerbank",
+		"slug": "powerbank-android",
 		"version": "1.0.19",
 		"orientation": "portrait",
 		"icon": "./assets/images/icon.png",
@@ -34,7 +34,10 @@
 				"INTERNET",
 				"VIBRATE",
 				"FOREGROUND_SERVICE",
-				"FOREGROUND_SERVICE_CONNECTED_DEVICE"
+				"FOREGROUND_SERVICE_CONNECTED_DEVICE",
+				"android.permission.BLUETOOTH",
+				"android.permission.BLUETOOTH_ADMIN",
+				"android.permission.BLUETOOTH_CONNECT"
 			],
 			"adaptiveIcon": {
 				"backgroundColor": "#E6F4FE",
@@ -78,6 +81,13 @@
 		"experiments": {
 			"typedRoutes": true,
 			"reactCompiler": true
-		}
+		},
+		"extra": {
+			"router": {},
+			"eas": {
+				"projectId": "5cbd17db-a8a3-43c7-880c-377d090d2f06"
+			}
+		},
+		"owner": "libertasnymph"
 	}
 }
