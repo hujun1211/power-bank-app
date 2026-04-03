@@ -18,6 +18,10 @@
 		},
 		"preview": {
 			"android": { "buildType": "apk" }
+		},
+		"production-ios": {
+			"distribution": "store",
+			"ios": {}
 		}
 	},
 	"cli": {

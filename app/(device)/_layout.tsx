@@ -7,6 +7,7 @@ export default function DeviceLayout() {
 		>
 			<Stack.Screen name="[id]" />
 			<Stack.Screen name="add" />
+			<Stack.Screen name="ble-debug" />
 			<Stack.Screen name="ota" />
 			<Stack.Screen name="map" />
 		</Stack>

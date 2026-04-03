@@ -264,6 +264,8 @@ export default function DeviceDetailPage() {
 		[t, colorScheme, device]
 	);
 
+	// 页面当前未渲染详情拖拽列表，保留该渲染函数以便后续恢复。
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const renderDetailItem = (key: string) => {
 		const item = detailItems[key as keyof typeof detailItems];
 		if (!item) return null;
@@ -572,7 +574,19 @@ export default function DeviceDetailPage() {
 					backgroundColor: 'bg-gray-400 dark:bg-gray-800',
 					onPress: handleRemoveDevice,
 				}}
-				showSecondary={false}
+				secondaryButton={{
+					label: 'BLE 调试',
+					backgroundColor: 'bg-blue-600 dark:bg-blue-700',
+					onPress: () =>
+						push({
+							pathname: '/(device)/ble-debug',
+							params: {
+								id: device.id,
+								name: device.name,
+							},
+						}),
+				}}
+				showSecondary={true}
 			/>
 
 			<CustomAlert

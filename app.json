@@ -1,7 +1,7 @@
 {
 	"expo": {
 		"name": "Power Bank",
-		"slug": "powerbank-android",
+		"slug": "powerbank",
 		"version": "1.0.19",
 		"orientation": "portrait",
 		"icon": "./assets/images/icon.png",
@@ -14,11 +14,12 @@
 				"com.apple.developer.networking.wifi-info": true
 			},
 			"infoPlist": {
-				"UIBackgroundModes": ["bluetooth-central"],
+				"UIBackgroundModes": ["bluetooth-central", "bluetooth-central"],
 				"NSBluetoothAlwaysUsageDescription": "我们需要在后台保持与充电宝的连接，以便在您使用其他应用时自动同步充电状态和交换数据。",
 				"NSBluetoothPeripheralUsageDescription": "我们需要使用蓝牙连接周边的充电宝设备。",
 				"NSLocationWhenInUseUsageDescription": "我们需要位置权限来辅助搜索附近的蓝牙设备。",
-				"NSLocationAlwaysAndWhenInUseUsageDescription": "我们需要位置权限来发现周边的网络设备。"
+				"NSLocationAlwaysAndWhenInUseUsageDescription": "我们需要位置权限来发现周边的网络设备。",
+				"ITSAppUsesNonExemptEncryption": false
 			},
 			"buildNumber": "16"
 		},
@@ -85,7 +86,7 @@
 		"extra": {
 			"router": {},
 			"eas": {
-				"projectId": "5cbd17db-a8a3-43c7-880c-377d090d2f06"
+				"projectId": "56a36b88-4841-480b-8828-8a33aba7875d"
 			}
 		},
 		"owner": "libertasnymph"
