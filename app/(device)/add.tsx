@@ -4,6 +4,7 @@ import CustomAlert from '@/components/ui/system-alert';
 import TopTitle from '@/components/ui/top-title';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import BleService, { BleError, BleErrorType } from '@/lib/ble-service';
+import { appendStoredDeviceIfMissing } from '@/utils/add-device-storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Buffer } from 'buffer';
 import { Stack, useRouter } from 'expo-router';
@@ -43,6 +44,8 @@ interface BluetoothDevice {
 }
 
 const deviceTypeCache = new Map<string, React.FC<any>>();
+// 临时关闭 Wi-Fi 配网弹窗，保留原流程代码以便后续恢复。
+const WIFI_CONFIG_ENABLED = false;
 
 const getRssiInfo = (rssi: number) => {
 	if (!rssi || rssi === 0 || rssi === -999)
@@ -295,9 +298,15 @@ export default function AddDevicePage() {
 					return;
 				}
 
-				console.log('[Page] 连接成功，请填写 Wi-Fi 信息');
-				loadWifiList();
-				setShowWifiModal(true);
+				if (WIFI_CONFIG_ENABLED) {
+					console.log('[Page] 连接成功，请填写 Wi-Fi 信息');
+					loadWifiList();
+					setShowWifiModal(true);
+					return;
+				}
+
+				console.log('[Page] Wi-Fi 配网已关闭，直接完成设备添加');
+				await completeDeviceAddition();
 			} catch (err: any) {
 				// 在这里拦截所有异常
 				// 只有在页面已卸载的情况下才拦截所有错误
@@ -331,6 +340,45 @@ export default function AddDevicePage() {
 
 		// 执行连接
 		runConnection();
+	};
+
+	const completeDeviceAddition = async () => {
+		const device = BleService.getConnectedDevice();
+		if (!device) {
+			showAlert(
+				t('error'),
+				t('add-device-ble-disconnected'),
+				'#EF4444',
+				undefined,
+				t('add-device-ble-disconnected-tip')
+			);
+			return;
+		}
+
+		const existing = await AsyncStorage.getItem('devices');
+		const list = existing ? JSON.parse(existing) : [];
+		const currentItem = devices.find((item) => item.id === device.id);
+		const nextList = appendStoredDeviceIfMissing(list, {
+			id: device.id,
+			name: device.name,
+			fallbackName: currentItem?.name,
+			manufacturerData: currentItem?.manufacturerData,
+		});
+
+		if (nextList.length !== list.length) {
+			await AsyncStorage.setItem('devices', JSON.stringify(nextList));
+		}
+
+		showAlert(
+			t('success'),
+			t('add-device-add-success', { deviceName: device.name || device.id }),
+			'#10B981',
+			async () => {
+				setIsConnecting(false);
+				await BleService.disconnect();
+				router.back();
+			}
+		);
 	};
 
 	// 发送配置
@@ -388,35 +436,8 @@ export default function AddDevicePage() {
 
 			if (sentCount === 0) throw new Error('未找到任何可写入的接口');
 
-			setTimeout(async () => {
-				const existing = await AsyncStorage.getItem('devices');
-				const list = existing ? JSON.parse(existing) : [];
-				if (!list.some((d: any) => d.id === device.id)) {
-					const currentItem = devices.find((d) => d.id === device.id);
-					await AsyncStorage.setItem(
-						'devices',
-						JSON.stringify([
-							...list,
-							{
-								id: device.id,
-								name: device.name || currentItem?.name || 'Unknown',
-								manufacturerData: currentItem?.manufacturerData,
-								addedAt: new Date().toISOString(),
-							},
-						])
-					);
-				}
-
-				showAlert(
-					t('success'),
-					t('add-device-add-success', { deviceName: device.name || device.id }),
-					'#10B981',
-					async () => {
-						setIsConnecting(false);
-						await BleService.disconnect();
-						router.back();
-					}
-				);
+			setTimeout(() => {
+				void completeDeviceAddition();
 			}, 2000);
 		} catch (err: any) {
 			showAlert(
@@ -707,73 +728,75 @@ export default function AddDevicePage() {
 			<Stack.Screen options={{ headerShown: false }} />
 			<TopTitle title={t('add-device-header-title')} showBack={true} />
 
-			<BottomModal
-				visible={showWifiModal}
-				onClose={cancelWifiConfig}
-				title={t('add-device-choose-wifi')}
-			>
-				<View className="mb-4">
-					<View className="mb-2 flex-row items-center justify-between pt-4">
-						<Text className="text-sm font-semibold text-gray-500">
-							{t('add-device-choose-wifi-ssid-list')}
-						</Text>
-						{isWifiScanning ? (
-							<ActivityIndicator size={14} color="#3B82F6" />
-						) : (
-							<TouchableOpacity onPress={loadWifiList}>
-								<RefreshCw size={14} color="#3B82F6" />
-							</TouchableOpacity>
-						)}
-					</View>
-					<View className="h-40 overflow-hidden rounded-xl border border-gray-100 bg-gray-50 dark:border-gray-800 dark:bg-gray-800/50">
-						<ScrollView nestedScrollEnabled={true}>
-							{wifiList.map((item, idx) => (
-								<TouchableOpacity
-									key={idx}
-									onPress={() => setSsid(item)}
-									className={`flex-row items-center justify-between p-3 ${
-										idx < wifiList.length - 1
-											? 'border-b border-gray-100 dark:border-gray-700'
-											: ''
-									} ${
-										ssid === item ? 'bg-blue-100/50 dark:bg-blue-900/20' : ''
-									}`}
-								>
-									<Text className="text-sm text-gray-800 dark:text-gray-200">
-										{item}
-									</Text>
-									{ssid === item && <Check size={16} color="#2563EB" />}
-								</TouchableOpacity>
-							))}
-						</ScrollView>
-					</View>
-				</View>
-				<TextInput
-					value={ssid}
-					onChangeText={setSsid}
-					placeholder={t('add-device-choose-wifi-ssid-placeholder')}
-					className="mb-4 rounded-xl border border-gray-200 bg-white p-3 text-base dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-				/>
-				<TextInput
-					value={password}
-					onChangeText={setPassword}
-					placeholder={t('add-device-choose-wifi-password-placeholder')}
-					secureTextEntry
-					className="mb-6 rounded-xl border border-gray-200 bg-white p-3 text-base dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-				/>
-				<TouchableOpacity
-					onPress={submitWifiConfig}
-					disabled={!ssid}
-					className={`items-center rounded-xl p-4 ${
-						ssid ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-700'
-					}`}
+			{WIFI_CONFIG_ENABLED && (
+				<BottomModal
+					visible={showWifiModal}
+					onClose={cancelWifiConfig}
+					title={t('add-device-choose-wifi')}
 				>
-					<Text className="font-bold text-white">
-						{t('add-device-choose-wifi-submit')}
-					</Text>
-				</TouchableOpacity>
-				<View style={{ height: insets.bottom }} />
-			</BottomModal>
+					<View className="mb-4">
+						<View className="mb-2 flex-row items-center justify-between pt-4">
+							<Text className="text-sm font-semibold text-gray-500">
+								{t('add-device-choose-wifi-ssid-list')}
+							</Text>
+							{isWifiScanning ? (
+								<ActivityIndicator size={14} color="#3B82F6" />
+							) : (
+								<TouchableOpacity onPress={loadWifiList}>
+									<RefreshCw size={14} color="#3B82F6" />
+								</TouchableOpacity>
+							)}
+						</View>
+						<View className="h-40 overflow-hidden rounded-xl border border-gray-100 bg-gray-50 dark:border-gray-800 dark:bg-gray-800/50">
+							<ScrollView nestedScrollEnabled={true}>
+								{wifiList.map((item, idx) => (
+									<TouchableOpacity
+										key={idx}
+										onPress={() => setSsid(item)}
+										className={`flex-row items-center justify-between p-3 ${
+											idx < wifiList.length - 1
+												? 'border-b border-gray-100 dark:border-gray-700'
+												: ''
+										} ${
+											ssid === item ? 'bg-blue-100/50 dark:bg-blue-900/20' : ''
+										}`}
+									>
+										<Text className="text-sm text-gray-800 dark:text-gray-200">
+											{item}
+										</Text>
+										{ssid === item && <Check size={16} color="#2563EB" />}
+									</TouchableOpacity>
+								))}
+							</ScrollView>
+						</View>
+					</View>
+					<TextInput
+						value={ssid}
+						onChangeText={setSsid}
+						placeholder={t('add-device-choose-wifi-ssid-placeholder')}
+						className="mb-4 rounded-xl border border-gray-200 bg-white p-3 text-base dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+					/>
+					<TextInput
+						value={password}
+						onChangeText={setPassword}
+						placeholder={t('add-device-choose-wifi-password-placeholder')}
+						secureTextEntry
+						className="mb-6 rounded-xl border border-gray-200 bg-white p-3 text-base dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+					/>
+					<TouchableOpacity
+						onPress={submitWifiConfig}
+						disabled={!ssid}
+						className={`items-center rounded-xl p-4 ${
+							ssid ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-700'
+						}`}
+					>
+						<Text className="font-bold text-white">
+							{t('add-device-choose-wifi-submit')}
+						</Text>
+					</TouchableOpacity>
+					<View style={{ height: insets.bottom }} />
+				</BottomModal>
+			)}
 
 			<View className="flex-1 bg-gray-50 dark:bg-black">
 				<View
