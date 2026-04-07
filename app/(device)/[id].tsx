@@ -4,6 +4,14 @@ import CustomAlert from '@/components/ui/system-alert';
 import TopTitle from '@/components/ui/top-title';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useDebouncedNavigation } from '@/hooks/use-debounced-navigation';
+import BleService from '@/lib/ble-service';
+import {
+	canOpenBleDebugForDevice,
+	getDeviceDetailConnectionLabel,
+	type DeviceDetailConnectionStatus,
+	shouldAutoConnectDetailDevice,
+	shouldShowManualConnectButton,
+} from '@/utils/device-detail-ble';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,11 +23,10 @@ import {
 	Droplet,
 	GripVertical,
 	Plug,
-	RotateCcw,
 	Thermometer,
 	Zap,
 } from 'lucide-react-native';
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, Text, TouchableOpacity, View } from 'react-native';
 import DraggableFlatList from 'react-native-draggable-flatlist';
@@ -110,6 +117,10 @@ export default function DeviceDetailPage() {
 	const [loading, setLoading] = useState(true);
 	const [alertVisible, setAlertVisible] = useState(false);
 	const [settingsModalVisible, setSettingsModalVisible] = useState(false);
+	const [shouldAutoConnect, setShouldAutoConnect] = useState(false);
+	const [connectionStatus, setConnectionStatus] =
+		useState<DeviceDetailConnectionStatus>('idle');
+	const [connectionAttemptKey, setConnectionAttemptKey] = useState(0);
 
 	// 默认顺序
 	const [itemOrder, setItemOrder] = useState([
@@ -166,14 +177,16 @@ export default function DeviceDetailPage() {
 		});
 	};
 
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	const loadDevice = async () => {
+	const loadDevice = useCallback(async () => {
 		try {
+			setShouldAutoConnect(false);
+			setConnectionStatus('idle');
 			const devicesJson = await AsyncStorage.getItem('devices');
 			if (devicesJson) {
 				const savedDevices = JSON.parse(devicesJson);
 				const foundDevice = savedDevices.find((d: any) => d.id === deviceId);
 				if (foundDevice) {
+					setShouldAutoConnect(true);
 					const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
 					const colorIndex = savedDevices.indexOf(foundDevice);
 					setDevice({
@@ -198,11 +211,60 @@ export default function DeviceDetailPage() {
 			setDevice(defaultDevice || null);
 			setLoading(false);
 		}
-	};
+	}, [deviceId]);
 
 	useEffect(() => {
-		loadDevice();
-	}, [deviceId, loadDevice]);
+		void loadDevice();
+	}, [loadDevice]);
+
+	useEffect(() => {
+		let cancelled = false;
+
+		const connectCurrentDevice = async () => {
+			if (loading || !shouldAutoConnect) {
+				return;
+			}
+
+			const currentConnected = BleService.getConnectedDevice();
+			if (
+				!shouldAutoConnectDetailDevice(deviceId, currentConnected?.id ?? null)
+			) {
+				if (!cancelled) {
+					setConnectionStatus('connected');
+				}
+				return;
+			}
+
+			if (!cancelled) {
+				setConnectionStatus('connecting');
+			}
+
+			try {
+				if (currentConnected && currentConnected.id !== deviceId) {
+					await BleService.disconnect();
+				}
+
+				const connectedDevice = await BleService.connectAndPrepare(deviceId);
+
+				if (!cancelled) {
+					setConnectionStatus(
+						connectedDevice.id === deviceId ? 'connected' : 'failed'
+					);
+				}
+			} catch (error) {
+				console.error('Auto connect device error:', error);
+				if (!cancelled) {
+					setConnectionStatus('failed');
+				}
+			}
+		};
+
+		void connectCurrentDevice();
+
+		return () => {
+			cancelled = true;
+		};
+	}, [connectionAttemptKey, deviceId, loading, shouldAutoConnect]);
 
 	const detailItems = useMemo(
 		() => ({
@@ -330,16 +392,20 @@ export default function DeviceDetailPage() {
 						>
 							{device.name}
 						</Text>
-						<Text className="mt-1 text-sm text-gray-400">1 分钟前同步</Text>
+						<Text className="mt-1 text-sm text-gray-400">
+							{getDeviceDetailConnectionLabel(connectionStatus)}
+						</Text>
 					</View>
 
-					<TouchableOpacity
-						onPress={() => {}}
-						className="h-10 w-10 items-center justify-center rounded-full bg-gray-200/50"
-						activeOpacity={0.7}
-					>
-						<RotateCcw size={20} color="#696969" />
-					</TouchableOpacity>
+					{shouldShowManualConnectButton(connectionStatus) && (
+						<TouchableOpacity
+							onPress={() => setConnectionAttemptKey((prev) => prev + 1)}
+							className="rounded-full bg-blue-500 px-4 py-2"
+							activeOpacity={0.8}
+						>
+							<Text className="text-sm font-semibold text-white">连接蓝牙</Text>
+						</TouchableOpacity>
+					)}
 				</View>
 				<View className="p-4">
 					<View className="flex-row flex-wrap" style={{ gap: 12 }}>
@@ -585,6 +651,7 @@ export default function DeviceDetailPage() {
 								name: device.name,
 							},
 						}),
+					disabled: !canOpenBleDebugForDevice(connectionStatus),
 				}}
 				showSecondary={true}
 			/>
