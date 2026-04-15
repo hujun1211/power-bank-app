@@ -3,16 +3,19 @@ import DeviceActionButtons from '@/components/ui/device-action-buttons';
 import CustomAlert from '@/components/ui/system-alert';
 import TopTitle from '@/components/ui/top-title';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useDebouncedNavigation } from '@/hooks/use-debounced-navigation';
 import BleService from '@/lib/ble-service';
 import {
-	canOpenBleDebugForDevice,
+	parseBleStatusPacket,
+	type BleProtocolData,
+} from '@/utils/ble-protocol-parser';
+import {
 	getDeviceDetailConnectionLabel,
-	type DeviceDetailConnectionStatus,
 	shouldAutoConnectDetailDevice,
 	shouldShowManualConnectButton,
+	type DeviceDetailConnectionStatus,
 } from '@/utils/device-detail-ble';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Buffer } from 'buffer';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -28,7 +31,13 @@ import {
 } from 'lucide-react-native';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, Text, TouchableOpacity, View } from 'react-native';
+import {
+	Pressable,
+	ScrollView,
+	Text,
+	TouchableOpacity,
+	View,
+} from 'react-native';
 import DraggableFlatList from 'react-native-draggable-flatlist';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // 定义存储 Key
@@ -108,7 +117,6 @@ function DetailItem({ icon, label, value }: DetailItemProps) {
 const MemoizedDetailItem = memo(DetailItem);
 
 export default function DeviceDetailPage() {
-	const { push } = useDebouncedNavigation(500);
 	const insets = useSafeAreaInsets();
 	const router = useRouter();
 	const { id } = useLocalSearchParams<{ id: string }>();
@@ -121,6 +129,9 @@ export default function DeviceDetailPage() {
 	const [connectionStatus, setConnectionStatus] =
 		useState<DeviceDetailConnectionStatus>('idle');
 	const [connectionAttemptKey, setConnectionAttemptKey] = useState(0);
+	const [latestBleData, setLatestBleData] = useState<
+		BleProtocolData['data'] | null
+	>(null);
 
 	// 默认顺序
 	const [itemOrder, setItemOrder] = useState([
@@ -265,6 +276,67 @@ export default function DeviceDetailPage() {
 			cancelled = true;
 		};
 	}, [connectionAttemptKey, deviceId, loading, shouldAutoConnect]);
+
+	// 自动监听以 0000fff1 开头的通道
+	useEffect(() => {
+		let cancelled = false;
+
+		const startMonitoring = async () => {
+			if (connectionStatus !== 'connected') {
+				return;
+			}
+
+			try {
+				const activeDevice = BleService.getConnectedDevice();
+				if (!activeDevice) {
+					return;
+				}
+
+				const services = await activeDevice.services();
+
+				for (const service of services) {
+					const characteristics = await service.characteristics();
+
+					for (const characteristic of characteristics) {
+						// 查找以 0000fff1 开头的通道
+						if (characteristic.uuid.toLowerCase().startsWith('0000fff1')) {
+							if (characteristic.isNotifiable || characteristic.isIndicatable) {
+								if (!cancelled) {
+									console.log(
+										`[DeviceDetail] 开始监听通道: ${characteristic.uuid}`
+									);
+
+									BleService.monitor(
+										service.uuid,
+										characteristic.uuid,
+										(data: Buffer) => {
+											// 解析协议数据
+											const parsed = parseBleStatusPacket(data);
+
+											// 保存最新的解析数据用于显示
+											if (parsed.valid && parsed.data) {
+												setLatestBleData(parsed.data);
+											}
+										}
+									);
+								}
+							}
+						}
+					}
+				}
+			} catch (error) {
+				console.error('[DeviceDetail] 启动监听失败:', error);
+			}
+		};
+
+		void startMonitoring();
+
+		return () => {
+			cancelled = true;
+			// 组件卸载时停止监听
+			void BleService.stopMonitor();
+		};
+	}, [connectionStatus]);
 
 	const detailItems = useMemo(
 		() => ({
@@ -441,12 +513,14 @@ export default function DeviceDetailPage() {
 								</View>
 								<View>
 									<Text className="mb-2 text-3xl font-bold text-blue-600 dark:text-blue-400">
-										{device.battery || 0}%
+										{latestBleData?.battery_percent ?? device.battery ?? 0}%
 									</Text>
 									<View className="h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
 										<View
 											className="h-full rounded-full bg-blue-500 dark:bg-blue-400"
-											style={{ width: `${device.battery || 0}%` }}
+											style={{
+												width: `${latestBleData?.battery_percent ?? device.battery ?? 0}%`,
+											}}
 										/>
 									</View>
 								</View>
@@ -483,21 +557,22 @@ export default function DeviceDetailPage() {
 										strokeWidth={2}
 									/>
 								</View>
-								<View className="flex flex-row items-end gap-1">
-									<Text className="text-3xl font-bold text-green-600 dark:text-green-400">
-										35
-									</Text>
-									<Text className="text-lg font-bold text-green-500 dark:text-green-400">
+								<View className="flex flex-col gap-1">
+									{/* <Text className="font-bold text-green-600 dark:text-green-400 text-2xl">
 										{t('device-detail-charge-discharge-power-status')}
-									</Text>
+									</Text> */}
+									<View className="flex-row items-center gap-2">
+										<Text className="text-sm text-green-700 dark:text-green-300">
+											C1: {latestBleData?.port_c1_power_w ?? 0}W
+										</Text>
+										<Text className="text-sm text-green-700 dark:text-green-300">
+											C2: {latestBleData?.port_c2_power_w ?? 0}W
+										</Text>
+										<Text className="text-sm text-green-700 dark:text-green-300">
+											A1: {latestBleData?.port_a1_power_w ?? 0}W
+										</Text>
+									</View>
 								</View>
-								{/* <Text
-									numberOfLines={1}
-									ellipsizeMode="tail"
-									className="mt-1 text-xs text-green-500 dark:text-green-400"
-								>
-									{t('device-detail-charge-discharge-power-time-remaining')}
-								</Text> */}
 							</LinearGradient>
 						</View>
 
@@ -533,7 +608,7 @@ export default function DeviceDetailPage() {
 								</View>
 								<View className="flex flex-row items-end gap-1">
 									<Text className="text-3xl font-bold text-purple-600 dark:text-purple-400">
-										9
+										{latestBleData?.charge_cycles ?? 9}
 									</Text>
 									<Text className="text-lg font-bold text-purple-500 dark:text-purple-400">
 										{t('device-detail-charges-number-status')}
@@ -574,7 +649,7 @@ export default function DeviceDetailPage() {
 								</View>
 								<View className="flex flex-row items-end gap-1">
 									<Text className="text-3xl font-bold text-sky-500 dark:text-sky-400">
-										28.5
+										{latestBleData?.temperature_c ?? 28.5}
 									</Text>
 									<Text className="text-lg font-bold text-sky-600 dark:text-sky-400">
 										{t('device-detail-temp-status')}
@@ -585,17 +660,17 @@ export default function DeviceDetailPage() {
 					</View>
 				</View>
 
-				{/* <View className="mx-4 mb-4 flex-1 overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-900">
+				{/* <View className="flex-1 bg-gray-100 dark:bg-gray-900 mx-4 mb-4 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
 					<GMapView />
-					<View className="absolute left-3 right-3 top-3 flex-row items-center justify-between">
-						<View className="rounded-lg bg-white/90 px-3 py-1.5 dark:bg-black/70">
-							<Text className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+					<View className="top-3 right-3 left-3 absolute flex-row justify-between items-center">
+						<View className="bg-white/90 dark:bg-black/70 px-3 py-1.5 rounded-lg">
+							<Text className="font-semibold text-gray-800 dark:text-gray-100 text-sm">
 								设备位置
 							</Text>
 						</View>
 						<TouchableOpacity
 							onPress={() => {}}
-							className="h-8 w-8 items-center justify-center rounded-full bg-white/90 dark:bg-black/70"
+							className="justify-center items-center bg-white/90 dark:bg-black/70 rounded-full w-8 h-8"
 							activeOpacity={0.7}
 						>
 							<RotateCcw
@@ -607,13 +682,13 @@ export default function DeviceDetailPage() {
 				</View> */}
 
 				{/* <View className="px-4">
-					<View className="mb-1 flex-row items-center justify-between ">
-						<Text className="text-2xl font-bold text-black dark:text-white">
+					<View className="flex-row justify-between items-center mb-1">
+						<Text className="font-bold text-black dark:text-white text-2xl">
 							{t('device-detail-info-title')}
 						</Text>
 						<Pressable
 							onPress={() => setSettingsModalVisible(true)}
-							className="rounded-full bg-gray-100 p-2 dark:bg-gray-800"
+							className="bg-gray-100 dark:bg-gray-800 p-2 rounded-full"
 						>
 							<ArrowDownUp
 								size={20}
@@ -624,36 +699,25 @@ export default function DeviceDetailPage() {
 				</View> */}
 
 				{/* <ScrollView
-					className="flex-1 "
+					className="flex-1"
 					showsVerticalScrollIndicator={false}
 					style={{ paddingBottom: insets.bottom }}
 				>
-					<View className="p-4 ">
+					<View className="p-4">
 						{itemOrder.map((key) => renderDetailItem(key))}
 					</View>
 				</ScrollView> */}
+
+				{/* 蓝牙数据接收区域 */}
 			</View>
 
 			<DeviceActionButtons
 				primaryButton={{
 					label: t('device-detail-action-delete'),
-					backgroundColor: 'bg-gray-400 dark:bg-gray-800',
+					backgroundColor: 'bg-red-500 dark:bg-red-600',
 					onPress: handleRemoveDevice,
 				}}
-				secondaryButton={{
-					label: 'BLE 调试',
-					backgroundColor: 'bg-blue-600 dark:bg-blue-700',
-					onPress: () =>
-						push({
-							pathname: '/(device)/ble-debug',
-							params: {
-								id: device.id,
-								name: device.name,
-							},
-						}),
-					disabled: !canOpenBleDebugForDevice(connectionStatus),
-				}}
-				showSecondary={true}
+				showSecondary={false}
 			/>
 
 			<CustomAlert

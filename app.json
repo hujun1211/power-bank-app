@@ -2,7 +2,7 @@
 	"expo": {
 		"name": "Power Bank",
 		"slug": "powerbank",
-		"version": "1.0.24",
+		"version": "1.0.32",
 		"orientation": "portrait",
 		"icon": "./assets/images/icon.png",
 		"scheme": "powerbank",
@@ -21,7 +21,8 @@
 				"NSLocationAlwaysAndWhenInUseUsageDescription": "我们需要位置权限来发现周边的网络设备。",
 				"ITSAppUsesNonExemptEncryption": false
 			},
-			"buildNumber": "16"
+			"buildNumber": "16",
+			"appleTeamId": "847A3DG99S"
 		},
 		"android": {
 			"package": "cn.xixiu.powerbank",

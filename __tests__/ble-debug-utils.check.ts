@@ -9,6 +9,8 @@ const {
 	getBleDebugResponseChannelNotice,
 	getCharacteristicCapabilities,
 	resolveBleDebugSessionState,
+	shouldShowBleDebugCommandOption,
+	shouldShowBleDebugResponseOption,
 } = require('../utils/ble-debug');
 
 const readyState = resolveBleDebugSessionState('device-1', 'device-1');
@@ -61,6 +63,12 @@ assert.equal(canSendBleDebugCommand(false, true), false);
 assert.equal(getBleDebugChannelRole('0000fff1-abcd'), 'command');
 assert.equal(getBleDebugChannelRole('0000FFF2-abcd'), 'response');
 assert.equal(getBleDebugChannelRole('0000180f-0000'), null);
+assert.equal(shouldShowBleDebugCommandOption(['writeWithResponse']), true);
+assert.equal(shouldShowBleDebugCommandOption(['writeWithoutResponse']), true);
+assert.equal(shouldShowBleDebugCommandOption(['read']), false);
+assert.equal(shouldShowBleDebugResponseOption(['notify']), true);
+assert.equal(shouldShowBleDebugResponseOption(['indicate']), true);
+assert.equal(shouldShowBleDebugResponseOption(['read']), false);
 
 assert.equal(getBleDebugResponseChannelNotice(true), null);
 assert.equal(

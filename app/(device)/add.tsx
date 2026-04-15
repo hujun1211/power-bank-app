@@ -115,13 +115,33 @@ export default function AddDevicePage() {
 		new Set()
 	);
 	const [showNoDevicesMessage, setShowNoDevicesMessage] = useState(false);
+	const [isBluetoothEnabled, setIsBluetoothEnabled] = useState(true);
 	const devicesMapRef = useRef<Map<string, BluetoothDevice>>(new Map());
 	const noDevicesTimeoutRef = useRef<number | null>(null);
 	const isTimeoutRef = useRef(false);
 
 	// 页面生命周期管理
 	useEffect(() => {
+		// 检查蓝牙状态
+		const checkBluetoothState = async () => {
+			try {
+				const state = await BleService.manager.state();
+				setIsBluetoothEnabled(state === 'PoweredOn');
+			} catch (error) {
+				console.error('检查蓝牙状态失败:', error);
+				setIsBluetoothEnabled(false);
+			}
+		};
+
+		checkBluetoothState();
+
+		// 监听蓝牙状态变化
+		const subscription = BleService.manager.onStateChange((state) => {
+			setIsBluetoothEnabled(state === 'PoweredOn');
+		}, true);
+
 		return () => {
+			subscription.remove();
 			// 页面卸载时标记为未挂载
 			isMountedRef.current = false;
 			// 如果有正在连接的设备，先取消它
@@ -803,6 +823,16 @@ export default function AddDevicePage() {
 					className="items-center justify-center pb-4"
 					style={{ marginTop: insets.top, zIndex: 1 }}
 				>
+					{!isBluetoothEnabled && (
+						<View className="mx-4 mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/30">
+							<Text className="text-center text-sm font-semibold text-amber-700 dark:text-amber-200">
+								⚠️ 蓝牙未开启
+							</Text>
+							<Text className="mt-2 text-center text-sm text-amber-600 dark:text-amber-300">
+								请先在系统设置中开启蓝牙功能，然后返回此页面开始扫描设备
+							</Text>
+						</View>
+					)}
 					<View className="h-[200px] w-full items-center justify-center">
 						{isScanning && (
 							<Animated.View
@@ -981,8 +1011,11 @@ export default function AddDevicePage() {
 					label: isScanning
 						? t('add-device-action-stop-scan')
 						: t('add-device-action-start-scan'),
-					backgroundColor: 'bg-blue-500 dark:bg-blue-600',
+					backgroundColor: isBluetoothEnabled
+						? 'bg-blue-500 dark:bg-blue-600'
+						: 'bg-gray-400 dark:bg-gray-600',
 					onPress: () => (isScanning ? stopScanning() : startScanning()),
+					disabled: !isBluetoothEnabled,
 				}}
 				secondaryButton={{
 					label: isConnecting

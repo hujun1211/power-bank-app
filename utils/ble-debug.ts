@@ -159,3 +159,18 @@ export function getBleDebugChannelRole(
 
 	return null;
 }
+
+export function shouldShowBleDebugCommandOption(
+	capabilities: BleCharacteristicCapability[]
+): boolean {
+	return (
+		capabilities.includes('writeWithResponse') ||
+		capabilities.includes('writeWithoutResponse')
+	);
+}
+
+export function shouldShowBleDebugResponseOption(
+	capabilities: BleCharacteristicCapability[]
+): boolean {
+	return capabilities.includes('notify') || capabilities.includes('indicate');
+}
